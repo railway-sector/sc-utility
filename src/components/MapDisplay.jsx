@@ -18,9 +18,12 @@ import {
   utilityGroupLayer,
   pierNoLayer,
   chainageLayer,
-  ngcpGroupLayer,
   utilityPointLayer,
   utilityLineLayer1,
+  ngcp_site6_GroupLayer,
+  ngcp_site7_GroupLayer,
+  ngcp_permanentRelo_GroupLayer,
+  lagunaLakeRoadNetworkLayer,
 } from "../layers";
 import "@esri/calcite-components/dist/components/calcite-button";
 
@@ -32,7 +35,11 @@ function MapDisplay() {
   useEffect(() => {
     if (sceneView) {
       arcgisScene.map.add(viaductLayer);
-      arcgisScene.map.add(ngcpGroupLayer);
+      arcgisScene.map.add(lagunaLakeRoadNetworkLayer);
+      arcgisScene.map.add(ngcp_permanentRelo_GroupLayer);
+      arcgisScene.map.add(ngcp_site7_GroupLayer);
+      arcgisScene.map.add(ngcp_site6_GroupLayer);
+
       arcgisScene.map.add(alignmentGroupLayer);
       arcgisScene.map.add(utilityGroupLayer);
       arcgisScene.map.add(stationLayer);

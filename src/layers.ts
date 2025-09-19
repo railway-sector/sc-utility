@@ -17,11 +17,13 @@ import {
   LabelSymbol3D,
   TextSymbol3DLayer,
 } from "@arcgis/core/symbols";
+
 import SolidEdges3D from "@arcgis/core/symbols/edges/SolidEdges3D";
 import SizeVariable from "@arcgis/core/renderers/visualVariables/SizeVariable";
 import RotationVariable from "@arcgis/core/renderers/visualVariables/RotationVariable";
 import GroupLayer from "@arcgis/core/layers/GroupLayer";
 import { labelSymbol3DLine } from "./Label";
+import MapImageLayer from "@arcgis/core/layers/MapImageLayer";
 
 /* Standalone table for Dates */
 export const dateTable = new FeatureLayer({
@@ -294,104 +296,104 @@ export const stationLayer = new FeatureLayer({
 });
 stationLayer.listMode = "hide";
 
-/* NGCP layers */
-const ngcpDpwhRoadRenderer = new SimpleRenderer({
-  symbol: new SimpleFillSymbol({
-    color: [255, 255, 0],
-    style: "backward-diagonal",
-    outline: {
-      color: "#FFFF00",
-      width: 0.7,
-    },
-  }),
-});
+/* NGCP layers (old) */
+// const ngcpDpwhRoadRenderer = new SimpleRenderer({
+//   symbol: new SimpleFillSymbol({
+//     color: [255, 255, 0],
+//     style: "backward-diagonal",
+//     outline: {
+//       color: "#FFFF00",
+//       width: 0.7,
+//     },
+//   }),
+// });
 
-export const ngcpDpwhRoad = new FeatureLayer({
-  portalItem: {
-    id: "b7d01020d54c4015ba0ba9454475d1dc",
-    portal: {
-      url: "https://gis.railway-sector.com/portal",
-    },
-  },
-  layerId: 3,
-  renderer: ngcpDpwhRoadRenderer,
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
-  popupEnabled: false,
-  title: "DPWH Road for NGCP",
-});
+// export const ngcpDpwhRoad = new FeatureLayer({
+//   portalItem: {
+//     id: "b7d01020d54c4015ba0ba9454475d1dc",
+//     portal: {
+//       url: "https://gis.railway-sector.com/portal",
+//     },
+//   },
+//   layerId: 3,
+//   renderer: ngcpDpwhRoadRenderer,
+//   elevationInfo: {
+//     mode: "on-the-ground",
+//   },
+//   popupEnabled: false,
+//   title: "DPWH Road for NGCP",
+// });
 
 // Pole Working Area for NGCP: Site 6
-const ngcpPoleWARenderer = new SimpleRenderer({
-  symbol: new SimpleFillSymbol({
-    color: [197, 0, 255],
-    style: "backward-diagonal",
-    outline: {
-      color: "#C500FF",
-      width: 0.7,
-    },
-  }),
-});
+// const ngcpPoleWARenderer = new SimpleRenderer({
+//   symbol: new SimpleFillSymbol({
+//     color: [197, 0, 255],
+//     style: "backward-diagonal",
+//     outline: {
+//       color: "#C500FF",
+//       width: 0.7,
+//     },
+//   }),
+// });
 
-export const ngcpPoleWA = new FeatureLayer({
-  portalItem: {
-    id: "b7d01020d54c4015ba0ba9454475d1dc",
-    portal: {
-      url: "https://gis.railway-sector.com/portal",
-    },
-  },
-  renderer: ngcpPoleWARenderer,
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
-  layerId: 4,
-  title: "Pole Working Area for NGCP",
-});
+// export const ngcpPoleWA = new FeatureLayer({
+//   portalItem: {
+//     id: "b7d01020d54c4015ba0ba9454475d1dc",
+//     portal: {
+//       url: "https://gis.railway-sector.com/portal",
+//     },
+//   },
+//   renderer: ngcpPoleWARenderer,
+//   elevationInfo: {
+//     mode: "on-the-ground",
+//   },
+//   layerId: 4,
+//   title: "Pole Working Area for NGCP",
+// });
 
-const bufferColor = ["#55FF00", "#FFFF00", "#E1E1E1"];
-const ngcpRowRenderer = new UniqueValueRenderer({
-  legendOptions: {
-    title: "Proposed ROW (Corridor)",
-  },
-  field: "Type",
-  uniqueValueInfos: [
-    {
-      value: "15m",
-      symbol: new SimpleLineSymbol({
-        color: bufferColor[0],
-        width: "3px",
-        style: "dash",
-      }),
-      label: "15m Buffer",
-    },
-    {
-      value: "20m",
-      symbol: new SimpleLineSymbol({
-        color: bufferColor[1],
-        width: "3px",
-        style: "solid",
-      }),
-      label: "20m Buffer",
-    },
-  ],
-});
+// const bufferColor = ["#55FF00", "#FFFF00", "#E1E1E1"];
+// const ngcpRowRenderer = new UniqueValueRenderer({
+//   legendOptions: {
+//     title: "Proposed ROW (Corridor)",
+//   },
+//   field: "Type",
+//   uniqueValueInfos: [
+//     {
+//       value: "15m",
+//       symbol: new SimpleLineSymbol({
+//         color: bufferColor[0],
+//         width: "3px",
+//         style: "dash",
+//       }),
+//       label: "15m Buffer",
+//     },
+//     {
+//       value: "20m",
+//       symbol: new SimpleLineSymbol({
+//         color: bufferColor[1],
+//         width: "3px",
+//         style: "solid",
+//       }),
+//       label: "20m Buffer",
+//     },
+//   ],
+// });
 // Symbol for 20m-buffer
 
-export const ngcpPROW = new FeatureLayer({
-  portalItem: {
-    id: "b7d01020d54c4015ba0ba9454475d1dc",
-    portal: {
-      url: "https://gis.railway-sector.com/portal",
-    },
-  },
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
-  renderer: ngcpRowRenderer,
-  layerId: 5,
-  title: "PROW Site 6 for NGCP",
-});
+// export const ngcpPROW = new FeatureLayer({
+//   portalItem: {
+//     id: "b7d01020d54c4015ba0ba9454475d1dc",
+//     portal: {
+//       url: "https://gis.railway-sector.com/portal",
+//     },
+//   },
+//   elevationInfo: {
+//     mode: "on-the-ground",
+//   },
+//   renderer: ngcpRowRenderer,
+//   layerId: 5,
+//   title: "PROW Site 6 for NGCP",
+// });
 
 // * Utility Point * //
 function customSymbol3D(name: string) {
@@ -1106,6 +1108,195 @@ const viaduct_renderer = new UniqueValueRenderer({
   ],
 });
 
+// NGCP Layers
+const ngcpLineRenderer_site6 = new SimpleRenderer({
+  symbol: new SimpleLineSymbol({
+    color: "#FFFF00",
+    width: "3px",
+    style: "dash",
+  }),
+});
+
+const ngcpLineRenderer_site7 = new SimpleRenderer({
+  symbol: new SimpleLineSymbol({
+    color: "#55FF00",
+    width: "3px",
+    style: "dash",
+  }),
+});
+
+const ngcpPointRenderer_site6 = new SimpleRenderer({
+  symbol: new SimpleMarkerSymbol({
+    size: 11,
+    color: "#FFFF00",
+    outline: {
+      width: 1.5,
+      color: "grey",
+    },
+  }),
+});
+
+const ngcpPointRenderer_site7 = new SimpleRenderer({
+  symbol: new SimpleMarkerSymbol({
+    size: 11,
+    color: "#55FF00",
+    outline: {
+      width: 1.5,
+      color: "grey",
+    },
+  }),
+});
+
+/// Site 6
+export const ngcp_site6_poleLayer = new FeatureLayer({
+  portalItem: {
+    id: "b7d01020d54c4015ba0ba9454475d1dc",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+  layerId: 1,
+  title: "Pole",
+  definitionExpression: "SiteNo = '6'",
+  popupEnabled: false,
+  renderer: ngcpPointRenderer_site6,
+});
+
+export const ngcp_site6_lineLayer = new FeatureLayer({
+  portalItem: {
+    id: "b7d01020d54c4015ba0ba9454475d1dc",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+  layerId: 2,
+  title: "Line",
+  definitionExpression: "SiteNo = '6'",
+  popupEnabled: false,
+  renderer: ngcpLineRenderer_site6,
+});
+
+/// Site 7
+export const ngcp_site7_poleLayer = new FeatureLayer({
+  portalItem: {
+    id: "b7d01020d54c4015ba0ba9454475d1dc",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+  layerId: 1,
+  title: "Pole",
+  definitionExpression: "SiteNo = '7'",
+  popupEnabled: false,
+  renderer: ngcpPointRenderer_site7,
+});
+
+export const ngcp_site7_lineLayer = new FeatureLayer({
+  portalItem: {
+    id: "b7d01020d54c4015ba0ba9454475d1dc",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+  layerId: 2,
+  title: "Line",
+  definitionExpression: "SiteNo = '7'",
+  popupEnabled: false,
+  renderer: ngcpLineRenderer_site7,
+});
+
+/// NGCP Permanent Relocation
+const ngcpPermanentPointRenderer = new SimpleRenderer({
+  symbol: new SimpleMarkerSymbol({
+    size: 11,
+    color: "#FF5500",
+    outline: {
+      width: 1.5,
+      color: "grey",
+    },
+  }),
+});
+
+const ngcpPermanentLineRenderer = new SimpleRenderer({
+  symbol: new SimpleLineSymbol({
+    color: "#FF5500",
+    width: "3px",
+    style: "dash",
+  }),
+});
+
+export const ngcp_permanent_relo_poleLayer = new FeatureLayer({
+  portalItem: {
+    id: "b7d01020d54c4015ba0ba9454475d1dc",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+  layerId: 4,
+  title: "Pole",
+  popupEnabled: false,
+  renderer: ngcpPermanentPointRenderer,
+});
+
+export const ngcp_permanent_relo_lineLayer = new FeatureLayer({
+  portalItem: {
+    id: "b7d01020d54c4015ba0ba9454475d1dc",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+  layerId: 5,
+  title: "Line",
+  popupEnabled: false,
+  renderer: ngcpPermanentLineRenderer,
+});
+
+const lagnaLakeRoadNetworkRenderer = new SimpleRenderer({
+  symbol: new SimpleFillSymbol({
+    color: [0, 0, 0, 0],
+    // style: "backward-diagonal",
+    outline: {
+      width: 2,
+      color: "#cccccc",
+      style: "short-dash",
+    },
+  }),
+});
+
+export const lagunaLakeRoadNetworkLayer = new FeatureLayer({
+  portalItem: {
+    id: "b7d01020d54c4015ba0ba9454475d1dc",
+    portal: {
+      url: "https://gis.railway-sector.com/portal",
+    },
+  },
+  elevationInfo: {
+    mode: "on-the-ground",
+  },
+  layerId: 3,
+  title: "Laguna Lakeshore Road Network (LLRN) Project",
+  popupEnabled: false,
+  renderer: lagnaLakeRoadNetworkRenderer,
+});
+
 export const viaductLayer = new SceneLayer({
   portalItem: {
     id: "1f89733a04b443e2a1e0e5e6dfd493e3",
@@ -1146,9 +1337,23 @@ export const alignmentGroupLayer = new GroupLayer({
   ], //stationLayer,
 });
 
-export const ngcpGroupLayer = new GroupLayer({
-  title: "NGCP Layers",
+export const ngcp_site6_GroupLayer = new GroupLayer({
+  title: "NGCP Layers Site 6",
   visible: true,
   visibilityMode: "independent",
-  layers: [ngcpDpwhRoad, ngcpPROW, ngcpPoleWA],
+  layers: [ngcp_site6_lineLayer, ngcp_site6_poleLayer],
+});
+
+export const ngcp_site7_GroupLayer = new GroupLayer({
+  title: "NGCP Layers Site 7",
+  visible: true,
+  visibilityMode: "independent",
+  layers: [ngcp_site7_lineLayer, ngcp_site7_poleLayer],
+});
+
+export const ngcp_permanentRelo_GroupLayer = new GroupLayer({
+  title: "NGCP Permanent Relocation",
+  visible: true,
+  visibilityMode: "independent",
+  layers: [ngcp_permanent_relo_lineLayer, ngcp_permanent_relo_poleLayer],
 });

@@ -8,6 +8,8 @@ import {
 } from "./layers";
 import StatisticDefinition from "@arcgis/core/rest/support/StatisticDefinition";
 import Query from "@arcgis/core/rest/support/Query";
+import Collection from "@arcgis/core/core/Collection";
+import ActionButton from "@arcgis/core/support/actions/ActionButton";
 
 // Updat date
 export async function dateUpdate() {
@@ -697,7 +699,21 @@ export function zoomToLayer(layer: any, view: any) {
 }
 
 export const defineActions = (event: any) => {
-  const item = event.item;
+  const { item } = event;
+
+  // NGCP Laguna Lakeshore Road Network
+  if (item.title === "Laguna Lakeshore Road Network (LLRN) Project") {
+    item.actionsSections = new Collection([
+      new Collection([
+        new ActionButton({
+          title: "Zoom to Area",
+          icon: "zoom-in-fixed",
+          id: "full-extent-llrn",
+        }),
+      ]),
+    ]);
+  }
+
   if (item.layer.type !== "group") {
     item.panel = {
       content: "legend",

@@ -16,6 +16,7 @@ import "@arcgis/map-components/components/arcgis-legend";
 import "@arcgis/map-components/components/arcgis-direct-line-measurement-3d";
 import "@arcgis/map-components/components/arcgis-area-measurement-3d";
 import { defineActions } from "../Query";
+import { lagunaLakeRoadNetworkLayer } from "../layers";
 
 function ActionPanel() {
   const [activeWidget, setActiveWidget] = useState(null);
@@ -140,6 +141,18 @@ function ActionPanel() {
             show-filter
             filter-placeholder="Filter layers"
             listItemCreatedFunction={defineActions}
+            onarcgisTriggerAction={(event) => {
+              const { id } = event.detail.action;
+              if (id === "full-extent-llrn") {
+                arcgisScene
+                  ?.goTo(lagunaLakeRoadNetworkLayer.fullExtent)
+                  .catch((error) => {
+                    if (error.name !== "AbortError") {
+                      console.error(error);
+                    }
+                  });
+              }
+            }}
           ></arcgis-layer-list>
         </CalcitePanel>
 
