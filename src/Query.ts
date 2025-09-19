@@ -722,7 +722,9 @@ export const defineActions = (event: any) => {
   }
   item.title === "Chainage" ||
   item.title === "Viaduct" ||
-  item.title === "Pier No"
+  item.title === "Pier No" ||
+  item.title === "Laguna Lakeshore Road Network (LLRN) Project" ||
+  item.title === "NGCP Permanent Relocation"
     ? (item.visible = false)
     : (item.visible = true);
 };

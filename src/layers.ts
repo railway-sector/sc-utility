@@ -1218,6 +1218,12 @@ export const ngcp_site7_lineLayer = new FeatureLayer({
 });
 
 /// NGCP Permanent Relocation
+// color: [255, 255, 0],
+// style: "backward-diagonal",
+// outline: {
+//   color: "#FFFF00",
+//   width: 0.7,
+// },
 const ngcpPermanentPointRenderer = new SimpleRenderer({
   symbol: new SimpleMarkerSymbol({
     size: 11,
@@ -1353,7 +1359,7 @@ export const ngcp_site7_GroupLayer = new GroupLayer({
 
 export const ngcp_permanentRelo_GroupLayer = new GroupLayer({
   title: "NGCP Permanent Relocation",
-  visible: true,
+  visible: false,
   visibilityMode: "independent",
   layers: [ngcp_permanent_relo_lineLayer, ngcp_permanent_relo_poleLayer],
 });
