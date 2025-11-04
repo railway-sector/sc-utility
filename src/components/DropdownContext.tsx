@@ -1,17 +1,10 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-  use,
-} from "react";
+import { useEffect, useState, use } from "react";
 import Select from "react-select";
 import "../index.css";
 import "../App.css";
-import { DropDownData } from "../customClass";
 import { utilityLineLayer, utilityPointLayer } from "../layers";
 import { MyContext } from "../App";
+import GenerateDropdownData from "npm-dropdown-package";
 
 export function DropdownData() {
   const { updateContractcps, updateCompanies, updateTypes } = use(MyContext);
@@ -29,10 +22,15 @@ export function DropdownData() {
   const [companySelected, setCompanySelected] = useState({ name: "" });
 
   useEffect(() => {
-    const dropdownData = new DropDownData({
-      featureLayers: [utilityPointLayer, utilityLineLayer],
-      fieldNames: ["CP", "Company", "Type"],
-    });
+    // const dropdownData = new DropDownData({
+    //   featureLayers: [utilityPointLayer, utilityLineLayer],
+    //   fieldNames: ["CP", "Company", "Type"],
+    // });
+
+    const dropdownData = new GenerateDropdownData(
+      [utilityPointLayer, utilityLineLayer],
+      ["CP", "Company", "Type"]
+    );
 
     dropdownData.dropDownQuery().then((response: any) => {
       setInitContractPacakgeCompType(response);
