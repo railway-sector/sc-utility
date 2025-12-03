@@ -198,25 +198,23 @@ function ActionPanel() {
 
         <CalcitePanel heading="Description" data-panel-id="information" hidden>
           {nextWidget === "information" ? (
-            <div className="informationDiv">
+            <div style={{ paddingLeft: "20px" }}>
+              This smart map shows the working progress on handling obstructing
+              utilities of the following:
               <ul>
-                <li>
-                  You can <b>filter utility data</b> by contract package,
-                  company, and data type: (point or line) using dropdown lists
-                  in the header panel.
-                </li>
-                <br />
-                <li>
-                  <b>Click bar-chart series</b> to view 'Complete' or
-                  'Incomplete' progress on work status by individual utitliy
-                  types over the map.
-                </li>
-                <br />
-                <li>
-                  Click/unclick widgets icon for viewing Layer list, Legend, and
-                  Basemaps in the action panel.
-                </li>
+                <li>Electricty, </li>
+                <li>Water / Sewage, </li>
+                <li>Telecommunication / CATV, </li>
+                <li>Oil & Gas, </li>
               </ul>
+              <div style={{ paddingLeft: "20px" }}>
+                <li>
+                  The source of data: <b>AutoCAD</b> for new utilities and{" "}
+                  <b>Master List tables</b> for updated information provided by
+                  the N2 Civil Team (weekly).
+                </li>
+                <li></li>
+              </div>
             </div>
           ) : (
             <div className="informationDiv" hidden></div>
