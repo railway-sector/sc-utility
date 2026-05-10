@@ -20,6 +20,31 @@ import PointSymbol3D from "@arcgis/core/symbols/PointSymbol3D.js";
 import IconSymbol3DLayer from "@arcgis/core/symbols/IconSymbol3DLayer.js";
 import LineSymbol3D from "@arcgis/core/symbols/LineSymbol3D.js";
 import PathSymbol3DLayer from "@arcgis/core/symbols/PathSymbol3DLayer.js";
+import QueryExpressionLayers from "query-layers-expression";
+
+export const queryc = new QueryExpressionLayers(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const queryc2 = new QueryExpressionLayers(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
 
 /* Standalone table for Dates */
 export const dateTable = new FeatureLayer({

@@ -5,6 +5,7 @@ import {
   utilityLineLayer1,
   utilityPointLayer,
   utilityLineLayer,
+  queryc,
 } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
@@ -22,7 +23,7 @@ import {
   utility_category_types,
   utilTypeField,
 } from "../uniqueValues";
-import { queryDefinitionExpression, queryExpression } from "../QueryExpression";
+import { queryDefinitionExpression } from "../QueryExpression";
 import { chartDataStackColumns } from "../ChartDataGenerator";
 import { chartRenderer } from "../ChartRenderer";
 
@@ -56,17 +57,11 @@ const Chart = () => {
 
   const chartID = "utility-bar";
   useEffect(() => {
-    const qe = queryExpression({
-      q1Value: contractp,
-      q1Field: cp_field,
-      q2Value: company,
-      q2Field: company_field,
-      q3Value: type,
-      q3Field: utilTypeField,
-    });
+    queryc.qValues = [contractp, company, type];
+    queryc.qFields = [cp_field, company_field, utilTypeField];
 
     queryDefinitionExpression({
-      queryExpression: qe,
+      queryExpression: queryc.queryExpression(),
       featureLayer: [
         utilityPointLayer,
         utilityPointLayer1,
@@ -76,7 +71,7 @@ const Chart = () => {
     });
 
     chartDataStackColumns({
-      qChart: qe,
+      qChart: queryc.queryExpression(),
       chartCategoryTypes: utility_category_types,
       chartCategoryField: chartCategoryTypeField, // "UtilType"
       chartCategoryValueType: "number",

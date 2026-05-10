@@ -1,10 +1,10 @@
-import { queryExpression } from "./QueryExpression";
 import type { StatusStateType, StatusTypenamesType } from "./uniqueValues";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 import Query from "@arcgis/core/rest/support/Query";
+import { queryc2 } from "./layers";
 
 //--------------------------------//
 //    Chart RendererParameters    //
@@ -75,21 +75,36 @@ export const highlightFilterLayerView = ({
 };
 
 //--- Click event on series
-export function clickSeries(
-  series: any,
-  layers: any,
-  q1Value: any,
-  q1Field: any,
-  q2Value: any,
-  q2Field: any,
-  q3Value: any,
-  q3Field: any,
-  chartCategoryTypes: any,
-  chartCategoryFieldScene: any,
-  statusStateValue: any,
-  statusField: any,
-  arcgisScene: any,
-) {
+interface clickSeriesType {
+  series: any;
+  layers: any;
+  q1Value: any;
+  q1Field: any;
+  q2Value: any;
+  q2Field: any;
+  q3Value: any;
+  q3Field: any;
+  chartCategoryTypes: any;
+  chartCategoryFieldScene: any;
+  statusStateValue: any;
+  statusField: any;
+  arcgisScene: any;
+}
+export function clickSeries({
+  series,
+  layers,
+  q1Value,
+  q1Field,
+  q2Value,
+  q2Field,
+  q3Value,
+  q3Field,
+  chartCategoryTypes,
+  chartCategoryFieldScene,
+  statusStateValue,
+  statusField,
+  arcgisScene,
+}: clickSeriesType) {
   series.columns.template.events.on("click", (ev: any) => {
     const selected: any = ev.target.dataItem?.dataContext;
     const categorySelected: string = selected.category;
@@ -98,24 +113,18 @@ export function clickSeries(
     );
     const typeSelected = find?.value;
 
-    const expression_layer = queryExpression({
-      q1Value: q1Value,
-      q1Field: q1Field,
-      q2Value: q2Value,
-      q2Field: q2Field,
-      q3Value: q3Value,
-      q3Field: q3Field,
-      chartCategory: typeSelected,
-      chartCategoryField: chartCategoryFieldScene,
-      chartCategoryType: "number",
-      status: statusStateValue,
-      statusField: statusField,
-    });
+    queryc2.qValues = [q1Value, q2Value, q3Value];
+    queryc2.qFields = [q1Field, q2Field, q3Field];
+    queryc2.chartCategory = typeSelected;
+    queryc2.chartCategoryField = chartCategoryFieldScene;
+    queryc2.chartCategoryType = "number";
+    queryc2.status = statusStateValue;
+    queryc2.statusField = statusField;
 
     for (const layer of layers) {
       highlightFilterLayerView({
         layer: layer,
-        qExpression: expression_layer,
+        qExpression: queryc2.queryExpression(),
         view: arcgisScene?.view,
       });
     }
@@ -123,32 +132,59 @@ export function clickSeries(
 }
 
 //--- Chart series
-export function makeSeries(
-  root: any,
-  chart: any,
-  layers: any,
-  q1Value: any,
-  q1Field: any,
-  q2Value: any,
-  q2Field: any,
-  q3Value: any,
-  q3Field: any,
-  chartCategoryTypes: any,
-  chartCategoryFieldScene: any,
-  data: any,
-  statusTypename: any,
-  statusStatename: any,
-  statusStateValue: any,
-  statusField: any,
-  xAxis: any,
-  yAxis: any,
-  legend: any,
-  new_axisFontSize: any,
-  seriesStatusColor: any,
-  strokeColor: any,
-  strokeWidth: any,
-  arcgisScene: any,
-) {
+interface makeSeriesType {
+  root: any;
+  chart: any;
+  layers: any;
+  q1Value: any;
+  q1Field: any;
+  q2Value: any;
+  q2Field: any;
+  q3Value: any;
+  q3Field: any;
+  chartCategoryTypes: any;
+  chartCategoryFieldScene: any;
+  data: any;
+  statusTypename: any;
+  statusStatename: any;
+  statusStateValue: any;
+  statusField: any;
+  xAxis: any;
+  yAxis: any;
+  legend: any;
+  new_axisFontSize: any;
+  seriesStatusColor: any;
+  strokeColor: any;
+  strokeWidth: any;
+  arcgisScene: any;
+}
+
+export function makeSeries({
+  root,
+  chart,
+  layers,
+  q1Value,
+  q1Field,
+  q2Value,
+  q2Field,
+  q3Value,
+  q3Field,
+  chartCategoryTypes,
+  chartCategoryFieldScene,
+  data,
+  statusTypename,
+  statusStatename,
+  statusStateValue,
+  statusField,
+  xAxis,
+  yAxis,
+  legend,
+  new_axisFontSize,
+  seriesStatusColor,
+  strokeColor,
+  strokeWidth,
+  arcgisScene,
+}: makeSeriesType) {
   const series = chart.series.push(
     am5xy.ColumnSeries.new(root, {
       name: statusTypename,
@@ -199,21 +235,21 @@ export function makeSeries(
   });
 
   // Click series
-  clickSeries(
-    series,
-    layers,
-    q1Value,
-    q1Field,
-    q2Value,
-    q2Field,
-    q3Value,
-    q3Field,
-    chartCategoryTypes,
-    chartCategoryFieldScene,
-    statusStateValue,
-    statusField,
-    arcgisScene,
-  );
+  clickSeries({
+    series: series,
+    layers: layers,
+    q1Value: q1Value,
+    q1Field: q1Field,
+    q2Value: q2Value,
+    q2Field: q2Field,
+    q3Value: q3Value,
+    q3Field: q3Field,
+    chartCategoryTypes: chartCategoryTypes,
+    chartCategoryFieldScene: chartCategoryFieldScene,
+    statusStateValue: statusStateValue,
+    statusField: statusField,
+    arcgisScene: arcgisScene,
+  });
 
   legend.data.push(series);
 }
@@ -357,32 +393,32 @@ export function chartRenderer({
   //--- Make Series
   statusTypename &&
     statusTypename.map((statustype: any, index: any) => {
-      makeSeries(
-        root,
-        chart,
-        layers,
-        q1Value,
-        q1Field,
-        q2Value,
-        q2Field,
-        q3Value,
-        q3Field,
-        chartCategoryTypes,
-        chartCategoryFieldScene,
-        data,
-        statustype,
-        statusStatename[index],
-        statusStateValue[index],
-        statusField,
-        xAxis,
-        yAxis,
-        legend,
-        new_axisFontSize,
-        seriesStatusColor,
-        strokeColor,
-        strokeWidth,
-        arcgisScene,
-      );
+      makeSeries({
+        root: root,
+        chart: chart,
+        layers: layers,
+        q1Value: q1Value,
+        q1Field: q1Field,
+        q2Value: q2Value,
+        q2Field: q2Field,
+        q3Value: q3Value,
+        q3Field: q3Field,
+        chartCategoryTypes: chartCategoryTypes,
+        chartCategoryFieldScene: chartCategoryFieldScene,
+        data: data,
+        statusTypename: statustype,
+        statusStatename: statusStatename[index],
+        statusStateValue: statusStateValue[index],
+        statusField: statusField,
+        xAxis: xAxis,
+        yAxis: yAxis,
+        legend: legend,
+        new_axisFontSize: new_axisFontSize,
+        seriesStatusColor: seriesStatusColor,
+        strokeColor: strokeColor,
+        strokeWidth: strokeWidth,
+        arcgisScene: arcgisScene,
+      });
     });
 }
 
