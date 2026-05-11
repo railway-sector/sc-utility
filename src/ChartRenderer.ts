@@ -86,7 +86,7 @@ interface clickSeriesType {
   q3Field: any;
   chartCategoryTypes: any;
   chartCategoryFieldScene: any;
-  statusStateValue: any;
+  statusStatename: any;
   statusField: any;
   arcgisScene: any;
 }
@@ -101,7 +101,7 @@ export function clickSeries({
   q3Field,
   chartCategoryTypes,
   chartCategoryFieldScene,
-  statusStateValue,
+  statusStatename,
   statusField,
   arcgisScene,
 }: clickSeriesType) {
@@ -118,15 +118,33 @@ export function clickSeries({
     queryc2.chartCategory = typeSelected;
     queryc2.chartCategoryField = chartCategoryFieldScene;
     queryc2.chartCategoryType = "number";
-    queryc2.status = statusStateValue;
+    queryc2.status = statusStatename === "incomp" ? 0 : 1;
     queryc2.statusField = statusField;
+    const geometryTypeSelected =
+      q3Value === "Point"
+        ? "point"
+        : q3Value === "Line"
+          ? "polyline"
+          : undefined;
 
     for (const layer of layers) {
-      highlightFilterLayerView({
-        layer: layer,
-        qExpression: queryc2.queryExpression(),
-        view: arcgisScene?.view,
-      });
+      if (!q3Value) {
+        // both point and line
+        highlightFilterLayerView({
+          layer: layer,
+          qExpression: queryc2.queryExpression(),
+          view: arcgisScene?.view,
+        });
+      } else {
+        // either point or line
+        if (layer.geometryType === geometryTypeSelected) {
+          highlightFilterLayerView({
+            layer: layer,
+            qExpression: queryc2.queryExpression(),
+            view: arcgisScene?.view,
+          });
+        }
+      }
     }
   });
 }
@@ -174,7 +192,6 @@ export function makeSeries({
   data,
   statusTypename,
   statusStatename,
-  statusStateValue,
   statusField,
   xAxis,
   yAxis,
@@ -246,7 +263,7 @@ export function makeSeries({
     q3Field: q3Field,
     chartCategoryTypes: chartCategoryTypes,
     chartCategoryFieldScene: chartCategoryFieldScene,
-    statusStateValue: statusStateValue,
+    statusStatename: statusStatename,
     statusField: statusField,
     arcgisScene: arcgisScene,
   });
