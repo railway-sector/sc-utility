@@ -67,3 +67,14 @@ export const utility_category_types = utilTypeLabels.map(
     });
   },
 );
+
+export const utilityStatusLabels = ["incomp", "comp"];
+export const utilityStatusValues = [0, 1];
+export const utilityStatusArray = utilityStatusLabels.map(
+  (status: any, index: any) => {
+    return Object.assign({
+      status: status,
+      value: utilityStatusValues[index],
+    });
+  },
+);

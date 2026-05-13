@@ -21,6 +21,7 @@ import {
   status_Field,
   statusColorForChart,
   utility_category_types,
+  utilityStatusArray,
   utilTypeField,
 } from "../uniqueValues";
 import { queryDefinitionExpression } from "../QueryExpression";
@@ -175,7 +176,7 @@ const Chart = () => {
       chartCategoryFieldScene: chartCategoryTypeField,
       statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
       statusStatename: ["comp", "incomp"], //["comp", "incomp", "ongoing"],
-      statusStateValue: [1, 0],
+      statusArray: utilityStatusArray,
       statusField: status_Field,
       seriesStatusColor: statusColorForChart,
       strokeColor: chartBorderLineColor,
