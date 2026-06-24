@@ -10,7 +10,6 @@ import ActionPanel from "./components/ActionPanel";
 import Header from "./components/Header";
 import Chart from "./components/Chart";
 import UndergroundSwitch from "./components/UndergroundSwitch";
-import { MyContext } from "./contexts/MyContext";
 import { authenticate } from "./autho";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -22,58 +21,22 @@ export function App(): React.JSX.Element {
     authenticate(setLoggedInState, "9txmFgtIL6djtigu");
   }, []);
 
-  const [contractcps, setContractcps] = useState<any>();
-  const [companies, setCompanies] = useState<any>();
-  const [ptLinetypes, setPtLineTypes] = useState<any>();
-  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
-
-  const updateContractcps = (newContractcp: any) => {
-    setContractcps(newContractcp);
-  };
-
-  const updateCompanies = (newCompany: any) => {
-    setCompanies(newCompany);
-  };
-
-  const updateTypes = (newPtLineType: any) => {
-    setPtLineTypes(newPtLineType);
-  };
-
-  const updateChartPanelwidth = (newWidth: any) => {
-    setChartPanelwidth(newWidth);
-  };
-
   return (
     <>
-      {loggedInState === true ? (
+      {loggedInState === true && (
         <div>
           <calcite-shell
             style={{ scrollbarWidth: "thin", scrollbarColor: "#888 #555" }}
           >
-            <MyContext
-              value={{
-                contractcps,
-                companies,
-                ptLinetypes,
-                chartPanelwidth,
-                updateContractcps,
-                updateCompanies,
-                updateTypes,
-                updateChartPanelwidth,
-              }}
-            >
-              <QueryClientProvider client={queryClient}>
-                <ActionPanel />
-                <UndergroundSwitch />
-                <Chart />
-                <MapDisplay />
-                <Header />
-              </QueryClientProvider>
-            </MyContext>
+            <QueryClientProvider client={queryClient}>
+              <ActionPanel />
+              <UndergroundSwitch />
+              <Chart />
+              <MapDisplay />
+              <Header />
+            </QueryClientProvider>
           </calcite-shell>
         </div>
-      ) : (
-        <div></div>
       )}
     </>
   );
