@@ -44,19 +44,26 @@ export function thousands_separators(num: any) {
   }
 }
 
-export function zoomToLayer(layer: any, view: any) {
-  return layer.queryExtent().then((response: any) => {
-    view
-      ?.goTo(response.extent, {
-        //response.extent
-        speedFactor: 2,
-      })
-      .catch((error: any) => {
-        if (error.name !== "AbortError") {
-          console.error(error);
-        }
-      });
+export async function zoomToLayer(layer: any, view: any) {
+  const response = await layer?.queryExtent();
+  view?.goTo(response.extent, { speedFactor: 2 }).catch((error: any) => {
+    if (error.name !== "AbortError") {
+      console.error(error);
+    }
   });
+
+  // return layer?.queryExtent().then((response: any) => {
+  //   view
+  //     ?.goTo(response.extent, {
+  //       //response.extent
+  //       speedFactor: 2,
+  //     })
+  //     .catch((error: any) => {
+  //       if (error.name !== "AbortError") {
+  //         console.error(error);
+  //       }
+  //     });
+  // });
 }
 
 // Layter list

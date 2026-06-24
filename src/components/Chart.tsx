@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { use, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   utilityPointLayer1,
   utilityLineLayer1,
@@ -9,84 +9,92 @@ import {
 } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
-import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
-import { thousands_separators, zoomToLayer } from "../Query";
+import { thousands_separators, zoomToLayer } from "../query";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
-import { MyContext } from "../contexts/MyContext";
 import {
   chartCategoryTypeField,
-  company_field,
-  cp_field,
   status_Field,
   statusColorForChart,
   utility_category_types,
   utilityStatusArray,
-  utilTypeField,
 } from "../uniqueValues";
-import { queryDefinitionExpression } from "../QueryExpression";
-import { chartDataStackColumns } from "../ChartDataGenerator";
-import { chartRenderer } from "../ChartRenderer";
-
-// Dispose function
-function maybeDisposeRoot(divId: any) {
-  am5.array.each(am5.registry.rootElements, function (root) {
-    if (root.dom.id === divId) {
-      root.dispose();
-    }
-  });
-}
+import { queryDefinitionExpression } from "../queryExpression";
+import { chartDataStackColumns } from "../chartDataGenerator";
+import { chartRenderer } from "../chartRenderer";
+import { legendSetter, rootSetter } from "../chartSetter";
+import { useQuery } from "@tanstack/react-query";
+import { locationKeys } from "../interfaceKeys";
+import type { SelectedLocation, ChartResponse } from "../interfaceKeys";
 
 // Draw chart
 const Chart = () => {
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
-  const {
-    contractcps,
-    companies,
-    ptLinetypes,
-    updateChartPanelwidth,
-    chartPanelwidth,
-  } = use(MyContext);
-  const contractp = contractcps;
-  const company = companies;
-  const type = ptLinetypes;
+  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
+
+  //--- 1. Location state
+  const { data: selectedLocation } = useQuery<SelectedLocation | any>({
+    queryKey: locationKeys.selected,
+    queryFn: async () => ({}),
+    staleTime: Infinity,
+  });
+  const cpackage = selectedLocation?.cpackage;
+  const company = selectedLocation?.company;
+  const utype = selectedLocation?.utype;
+
+  //--- 2. Streamlined Data Fetching with useQuery
+  const { data } = useQuery<ChartResponse | any>({
+    queryKey: [
+      cpackage,
+      company,
+      utype,
+      utilityPointLayer,
+      utilityPointLayer1,
+      utilityLineLayer,
+      utilityLineLayer1,
+      status_Field,
+    ],
+    queryFn: async () => {
+      queryc.qValues = [cpackage, company, utype];
+
+      queryDefinitionExpression({
+        queryExpression: queryc.queryExpression(),
+        featureLayer: [
+          utilityPointLayer,
+          utilityPointLayer1,
+          utilityLineLayer,
+          utilityLineLayer1,
+        ],
+      });
+
+      const chartData = await chartDataStackColumns({
+        qChart: queryc.queryExpression(),
+        chartCategoryTypes: utility_category_types,
+        chartCategoryField: chartCategoryTypeField, // "UtilType"
+        chartCategoryValueType: "number",
+        layers: [utilityPointLayer, utilityLineLayer],
+        statusState: [0, 1],
+        statusField: status_Field,
+      });
+
+      zoomToLayer(utilityPointLayer, arcgisScene?.view);
+
+      return {
+        chartData: chartData[0] || [],
+        totaln: chartData[1] || 0,
+        perc: chartData[2] || 0,
+      };
+    },
+    staleTime: Infinity,
+  });
+  const chartData = data?.chartData || [];
+  const totaln = data?.totaln || 0;
+  const perc_comp = data?.perc || 0;
+
+  //-------------------------------
+
   const legendRef = useRef<unknown | any | undefined>({});
   const chartRef = useRef<unknown | any | undefined>({});
-  const [chartData, setChartData] = useState([]);
-  const [totalNumber, setTotalNumber] = useState<number>(0);
-  const [progress, setProgress] = useState<number>(0);
-
-  const chartID = "utility-bar";
-  useEffect(() => {
-    queryc.qValues = [contractp, company, type];
-    queryc.qFields = [cp_field, company_field, utilTypeField];
-
-    queryDefinitionExpression({
-      queryExpression: queryc.queryExpression(),
-      featureLayer: [
-        utilityPointLayer,
-        utilityPointLayer1,
-        utilityLineLayer,
-        utilityLineLayer1,
-      ],
-    });
-
-    chartDataStackColumns({
-      qChart: queryc.queryExpression(),
-      chartCategoryTypes: utility_category_types,
-      chartCategoryField: chartCategoryTypeField, // "UtilType"
-      chartCategoryValueType: "number",
-      layers: [utilityPointLayer, utilityLineLayer],
-      statusState: [0, 1],
-      statusField: status_Field,
-    }).then((result: any) => {
-      setChartData(result[0]);
-      setTotalNumber(result[1]);
-      setProgress(result[2]);
-    });
-
-    zoomToLayer(utilityPointLayer, arcgisScene?.view);
-  }, [contractp, company, type]);
+  const chartID = "utility_chart";
 
   // Define parameters
   const marginTop = 0;
@@ -102,9 +110,6 @@ const Chart = () => {
   const chartBorderLineColor = "#00c5ff";
   const chartBorderLineWidth = 0.4;
 
-  // ************************************
-  //  Responsive Chart parameters
-  // ***********************************
   const new_fontSize = chartPanelwidth / 20;
   const new_valueSize = new_fontSize * 1.55;
   const new_chartIconSize = chartPanelwidth * 0.07;
@@ -113,19 +118,7 @@ const Chart = () => {
 
   // Utility Chart
   useEffect(() => {
-    maybeDisposeRoot(chartID);
-
-    const root = am5.Root.new(chartID);
-    root.container.children.clear();
-    root._logo?.dispose();
-
-    // Set themesf
-    // https://www.amcharts.com/docs/v5/concepts/themes/
-    root.setThemes([
-      am5themes_Animated.new(root),
-      am5themes_Responsive.new(root),
-    ]);
-
+    const root = rootSetter({ chartID: chartID });
     const chart = root.container.children.push(
       am5xy.XYChart.new(root, {
         panX: false,
@@ -145,15 +138,16 @@ const Chart = () => {
     );
     chartRef.current = chart;
 
-    const legend = chart.children.push(
-      am5.Legend.new(root, {
-        centerX: am5.p50,
-        centerY: am5.percent(50),
-        x: am5.percent(60),
-        y: am5.percent(97),
-        marginTop: 20,
-      }),
-    );
+    const legend = legendSetter({
+      chart: chart,
+      root: root,
+      centerX: 50,
+      centerY: 50,
+      x: 60,
+      y: 97,
+      marginTop: 20,
+      layout: root.horizontalLayout,
+    });
     legendRef.current = legend;
 
     chartRenderer({
@@ -166,12 +160,7 @@ const Chart = () => {
         utilityLineLayer,
         utilityLineLayer1,
       ],
-      q1Value: contractp,
-      q1Field: cp_field,
-      q2Value: company,
-      q2Field: company_field,
-      q3Value: type,
-      q3Field: utilTypeField,
+      qChart: queryc,
       chartCategoryTypes: utility_category_types,
       chartCategoryFieldScene: chartCategoryTypeField,
       statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
@@ -187,7 +176,7 @@ const Chart = () => {
       chartIconPositionX: chartIconPositionX,
       chartPaddingRightIconLabel: chartPaddingRightIconLabel,
       legend: legend,
-      updateChartPanelwidth: updateChartPanelwidth,
+      updateChartPanelwidth: setChartPanelwidth,
     });
 
     chart.appear(1000, 100);
@@ -248,7 +237,7 @@ const Chart = () => {
                 margin: "auto",
               }}
             >
-              {thousands_separators(progress)} %
+              {thousands_separators(perc_comp)} %
             </dd>
             <div
               style={{
@@ -258,7 +247,7 @@ const Chart = () => {
                 lineHeight: "1.2",
               }}
             >
-              ({thousands_separators(totalNumber)})
+              ({thousands_separators(totaln)})
             </div>
           </dl>
         </div>
@@ -266,7 +255,7 @@ const Chart = () => {
         <div
           id={chartID}
           style={{
-            height: "69vh",
+            height: "71vh",
             backgroundColor: "rgb(0,0,0,0)",
             color: "white",
             marginRight: "10px",

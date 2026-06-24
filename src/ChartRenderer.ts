@@ -4,7 +4,6 @@ import * as am5xy from "@amcharts/amcharts5/xy";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 import Query from "@arcgis/core/rest/support/Query";
-import { queryc2 } from "./layers";
 
 //--------------------------------//
 //    Chart RendererParameters    //
@@ -31,16 +30,28 @@ export function responsiveChart(chart: any, legend: any) {
 interface layerViewQueryType {
   layer?: any;
   qExpression?: any;
+  qChart?: any;
   view: any;
 }
+
+function querycReset(qChart: any) {
+  qChart.qExpression = undefined;
+  qChart.q2Expression = undefined;
+  qChart.status = undefined;
+  qChart.statusField = undefined;
+  qChart.chartCategory = undefined;
+  qChart.chartCategoryField = undefined;
+}
+
 // FeatureLayer or SceneLayer
 export const highlightFilterLayerView = ({
   layer,
-  qExpression,
+  qChart,
   view,
 }: layerViewQueryType) => {
   const query = layer.createQuery();
-  query.where = qExpression;
+  const qe = qChart.queryExpression();
+  query.where = qe;
   let highlightSelect: any;
 
   view?.whenLayerView(layer).then((layerView: any) => {
@@ -60,222 +71,18 @@ export const highlightFilterLayerView = ({
       highlightSelect = layerView.highlight(objID);
     });
 
-    layerView.filter = new FeatureFilter({
-      where: qExpression,
-    });
+    layerView.filter = new FeatureFilter({ where: qe });
 
     // For initial state, we need to add this
     view?.on("click", () => {
       layerView.filter = new FeatureFilter({
         where: undefined,
       });
+      querycReset(qChart);
       highlightSelect && highlightSelect.remove();
     });
   });
 };
-
-//--- Click event on series
-interface clickSeriesType {
-  series: any;
-  layers: any;
-  q1Value: any;
-  q1Field: any;
-  q2Value: any;
-  q2Field: any;
-  q3Value: any;
-  q3Field: any;
-  chartCategoryTypes: any;
-  chartCategoryFieldScene: any;
-  statusStatename: any;
-  statusArray: any;
-  statusField: any;
-  arcgisScene: any;
-}
-export function clickSeries({
-  series,
-  layers,
-  q1Value,
-  q1Field,
-  q2Value,
-  q2Field,
-  q3Value,
-  q3Field,
-  chartCategoryTypes,
-  chartCategoryFieldScene,
-  statusStatename,
-  statusArray,
-  statusField,
-  arcgisScene,
-}: clickSeriesType) {
-  series.columns.template.events.on("click", (ev: any) => {
-    const selected: any = ev.target.dataItem?.dataContext;
-    const categorySelected: string = selected.category;
-    const find = chartCategoryTypes.find(
-      (emp: any) => emp.category === categorySelected,
-    );
-    const typeSelected = find?.value;
-
-    queryc2.qValues = [q1Value, q2Value, q3Value];
-    queryc2.qFields = [q1Field, q2Field, q3Field];
-    queryc2.chartCategory = typeSelected;
-    queryc2.chartCategoryField = chartCategoryFieldScene;
-    queryc2.chartCategoryType = "number";
-    queryc2.status = statusArray.find(
-      (item: any) => item.status === statusStatename,
-    ).value;
-    queryc2.statusField = statusField;
-    const geometryTypeSelected =
-      q3Value === "Point"
-        ? "point"
-        : q3Value === "Line"
-          ? "polyline"
-          : undefined;
-
-    for (const layer of layers) {
-      if (!q3Value) {
-        // both point and line
-        highlightFilterLayerView({
-          layer: layer,
-          qExpression: queryc2.queryExpression(),
-          view: arcgisScene?.view,
-        });
-      } else {
-        // either point or line
-        if (layer.geometryType === geometryTypeSelected) {
-          highlightFilterLayerView({
-            layer: layer,
-            qExpression: queryc2.queryExpression(),
-            view: arcgisScene?.view,
-          });
-        }
-      }
-    }
-  });
-}
-
-//--- Chart series
-interface makeSeriesType {
-  root: any;
-  chart: any;
-  layers: any;
-  q1Value: any;
-  q1Field: any;
-  q2Value: any;
-  q2Field: any;
-  q3Value: any;
-  q3Field: any;
-  chartCategoryTypes: any;
-  chartCategoryFieldScene: any;
-  data: any;
-  statusTypename: any;
-  statusStatename: any;
-  statusArray: any;
-  statusField: any;
-  xAxis: any;
-  yAxis: any;
-  legend: any;
-  new_axisFontSize: any;
-  seriesStatusColor: any;
-  strokeColor: any;
-  strokeWidth: any;
-  arcgisScene: any;
-}
-
-export function makeSeries({
-  root,
-  chart,
-  layers,
-  q1Value,
-  q1Field,
-  q2Value,
-  q2Field,
-  q3Value,
-  q3Field,
-  chartCategoryTypes,
-  chartCategoryFieldScene,
-  data,
-  statusTypename,
-  statusStatename,
-  statusArray,
-  statusField,
-  xAxis,
-  yAxis,
-  legend,
-  new_axisFontSize,
-  seriesStatusColor,
-  strokeColor,
-  strokeWidth,
-  arcgisScene,
-}: makeSeriesType) {
-  const series = chart.series.push(
-    am5xy.ColumnSeries.new(root, {
-      name: statusTypename,
-      stacked: true,
-      xAxis: xAxis,
-      yAxis: yAxis,
-      baseAxis: yAxis,
-      valueXField: statusStatename,
-      valueXShow: "valueXTotalPercent",
-      categoryYField: "category",
-      fill:
-        statusStatename === "incomp"
-          ? am5.color(seriesStatusColor[0])
-          : statusStatename === "comp"
-            ? am5.color(seriesStatusColor[3])
-            : statusStatename === "delayed"
-              ? am5.color(seriesStatusColor[2])
-              : am5.color(seriesStatusColor[1]),
-      stroke: am5.color(strokeColor),
-    }),
-  );
-
-  series.columns.template.setAll({
-    fillOpacity: statusStatename === "comp" ? 1 : 0.5,
-    tooltipText: "{name}: {valueX}", // "{categoryY}: {valueX}",
-    tooltipY: am5.percent(90),
-    strokeWidth: strokeWidth,
-  });
-  series.data.setAll(data);
-
-  series.appear();
-
-  series.bullets.push(() => {
-    return am5.Bullet.new(root, {
-      sprite: am5.Label.new(root, {
-        text:
-          statusStatename === "incomp"
-            ? ""
-            : "{valueXTotalPercent.formatNumber('#.')}%", //"{valueX}",
-        fill: root.interfaceColors.get("alternativeText"),
-        opacity: statusStatename === "incomp" ? 0 : 1,
-        fontSize: new_axisFontSize,
-        centerY: am5.p50,
-        centerX: am5.p50,
-        populateText: true,
-      }),
-    });
-  });
-
-  // Click series
-  clickSeries({
-    series: series,
-    layers: layers,
-    q1Value: q1Value,
-    q1Field: q1Field,
-    q2Value: q2Value,
-    q2Field: q2Field,
-    q3Value: q3Value,
-    q3Field: q3Field,
-    chartCategoryTypes: chartCategoryTypes,
-    chartCategoryFieldScene: chartCategoryFieldScene,
-    statusStatename: statusStatename,
-    statusArray: statusArray,
-    statusField: statusField,
-    arcgisScene: arcgisScene,
-  });
-
-  legend.data.push(series);
-}
 
 //--- Chart Renderer
 interface chartType {
@@ -283,12 +90,7 @@ interface chartType {
   chart: any;
   data: any;
   layers: [FeatureLayer, FeatureLayer?, FeatureLayer?, FeatureLayer?];
-  q1Value: any;
-  q1Field: any;
-  q2Value?: any;
-  q2Field?: any;
-  q3Value?: any;
-  q3Field?: any;
+  qChart: any;
   chartCategoryTypes?: any;
   chartCategoryFieldRevit?: any;
   chartCategoryFieldScene?: any;
@@ -315,12 +117,7 @@ export function chartRenderer({
   chart,
   data,
   layers,
-  q1Value,
-  q1Field,
-  q2Value,
-  q2Field,
-  q3Value,
-  q3Field,
+  qChart,
   chartCategoryTypes,
   chartCategoryFieldScene,
   statusTypename,
@@ -420,12 +217,7 @@ export function chartRenderer({
         root: root,
         chart: chart,
         layers: layers,
-        q1Value: q1Value,
-        q1Field: q1Field,
-        q2Value: q2Value,
-        q2Field: q2Field,
-        q3Value: q3Value,
-        q3Field: q3Field,
+        qChart: qChart,
         chartCategoryTypes: chartCategoryTypes,
         chartCategoryFieldScene: chartCategoryFieldScene,
         data: data,
@@ -443,6 +235,180 @@ export function chartRenderer({
         arcgisScene: arcgisScene,
       });
     });
+}
+
+//--- Chart series
+interface makeSeriesType {
+  root: any;
+  chart: any;
+  layers: any;
+  qChart: any;
+  chartCategoryTypes: any;
+  chartCategoryFieldScene: any;
+  data: any;
+  statusTypename: any;
+  statusStatename: any;
+  statusArray: any;
+  statusField: any;
+  xAxis: any;
+  yAxis: any;
+  legend: any;
+  new_axisFontSize: any;
+  seriesStatusColor: any;
+  strokeColor: any;
+  strokeWidth: any;
+  arcgisScene: any;
+}
+
+export function makeSeries({
+  root,
+  chart,
+  layers,
+  qChart,
+  chartCategoryTypes,
+  chartCategoryFieldScene,
+  data,
+  statusTypename,
+  statusStatename,
+  statusArray,
+  statusField,
+  xAxis,
+  yAxis,
+  legend,
+  new_axisFontSize,
+  seriesStatusColor,
+  strokeColor,
+  strokeWidth,
+  arcgisScene,
+}: makeSeriesType) {
+  const series = chart.series.push(
+    am5xy.ColumnSeries.new(root, {
+      name: statusTypename,
+      stacked: true,
+      xAxis: xAxis,
+      yAxis: yAxis,
+      baseAxis: yAxis,
+      valueXField: statusStatename,
+      valueXShow: "valueXTotalPercent",
+      categoryYField: "category",
+      fill:
+        statusStatename === "incomp"
+          ? am5.color(seriesStatusColor[0])
+          : statusStatename === "comp"
+            ? am5.color(seriesStatusColor[3])
+            : statusStatename === "delayed"
+              ? am5.color(seriesStatusColor[2])
+              : am5.color(seriesStatusColor[1]),
+      stroke: am5.color(strokeColor),
+    }),
+  );
+
+  series.columns.template.setAll({
+    fillOpacity: statusStatename === "comp" ? 1 : 0.5,
+    tooltipText: "{name}: {valueX}", // "{categoryY}: {valueX}",
+    tooltipY: am5.percent(90),
+    strokeWidth: strokeWidth,
+  });
+  series.data.setAll(data);
+
+  series.appear();
+
+  series.bullets.push(() => {
+    return am5.Bullet.new(root, {
+      sprite: am5.Label.new(root, {
+        text:
+          statusStatename === "incomp"
+            ? ""
+            : "{valueXTotalPercent.formatNumber('#.')}%", //"{valueX}",
+        fill: root.interfaceColors.get("alternativeText"),
+        opacity: statusStatename === "incomp" ? 0 : 1,
+        fontSize: new_axisFontSize,
+        centerY: am5.p50,
+        centerX: am5.p50,
+        populateText: true,
+      }),
+    });
+  });
+
+  // Click series
+  clickSeries({
+    series: series,
+    layers: layers,
+    qChart: qChart,
+    chartCategoryTypes: chartCategoryTypes,
+    chartCategoryFieldScene: chartCategoryFieldScene,
+    statusStatename: statusStatename,
+    statusArray: statusArray,
+    statusField: statusField,
+    arcgisScene: arcgisScene,
+  });
+
+  legend.data.push(series);
+}
+
+//--- Click event on series
+interface clickSeriesType {
+  series: any;
+  layers: any;
+  qChart: any;
+  chartCategoryTypes: any;
+  chartCategoryFieldScene: any;
+  statusStatename: any;
+  statusArray: any;
+  statusField: any;
+  arcgisScene: any;
+}
+export function clickSeries({
+  series,
+  layers,
+  qChart,
+  chartCategoryTypes,
+  chartCategoryFieldScene,
+  statusStatename,
+  statusArray,
+  statusField,
+  arcgisScene,
+}: clickSeriesType) {
+  series.columns.template.events.on("click", (ev: any) => {
+    const selected: any = ev.target.dataItem?.dataContext;
+    const categorySelected: string = selected.category;
+    const find = chartCategoryTypes.find(
+      (emp: any) => emp.category === categorySelected,
+    );
+    const typeSelected = find?.value;
+
+    qChart.chartCategory = typeSelected;
+    qChart.chartCategoryField = chartCategoryFieldScene;
+    qChart.chartCategoryType = "number";
+    qChart.status = statusArray.find(
+      (item: any) => item.status === statusStatename,
+    ).value;
+    qChart.statusField = statusField;
+
+    const utype = qChart.qValues.at(-1);
+    const geometryTypeSelected =
+      utype === "Point" ? "point" : utype === "Line" ? "polyline" : undefined;
+
+    for (const layer of layers) {
+      if (!utype) {
+        // both point and line
+        highlightFilterLayerView({
+          layer: layer,
+          qChart: qChart,
+          view: arcgisScene?.view,
+        });
+      } else {
+        // either point or line
+        if (layer.geometryType === geometryTypeSelected) {
+          highlightFilterLayerView({
+            layer: layer,
+            qChart: qChart,
+            view: arcgisScene?.view,
+          });
+        }
+      }
+    }
+  });
 }
 
 interface layersRevitVisibilityType {

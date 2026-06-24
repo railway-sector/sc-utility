@@ -21,22 +21,11 @@ import IconSymbol3DLayer from "@arcgis/core/symbols/IconSymbol3DLayer.js";
 import LineSymbol3D from "@arcgis/core/symbols/LineSymbol3D.js";
 import PathSymbol3DLayer from "@arcgis/core/symbols/PathSymbol3DLayer.js";
 import QueryExpressionLayers from "query-layers-expression";
+import { company_field, cp_field, utilTypeField } from "./uniqueValues";
 
 export const queryc = new QueryExpressionLayers(
   undefined,
-  undefined,
-  undefined,
-  undefined,
-  "string",
-  0,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const queryc2 = new QueryExpressionLayers(
-  undefined,
-  undefined,
+  [cp_field, company_field, utilTypeField],
   undefined,
   undefined,
   "string",
