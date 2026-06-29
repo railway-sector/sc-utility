@@ -21,7 +21,23 @@ import IconSymbol3DLayer from "@arcgis/core/symbols/IconSymbol3DLayer.js";
 import LineSymbol3D from "@arcgis/core/symbols/LineSymbol3D.js";
 import PathSymbol3DLayer from "@arcgis/core/symbols/PathSymbol3DLayer.js";
 import QueryExpressionLayers from "query-layers-expression";
-import { company_field, cp_field, utilTypeField } from "./uniqueValues";
+import {
+  company_field,
+  cp_field,
+  status_Field,
+  utility_category_types,
+  utilTypeField,
+} from "./uniqueValues";
+import ChartStackColumns from "chart-stack-column";
+
+export const chartstack = new ChartStackColumns(
+  undefined, // qChart
+  utility_category_types, // categoryTypes
+  undefined, // categoryTypeField
+  undefined, // layers
+  status_Field, // status field
+  undefined, // statusState
+);
 
 export const queryc = new QueryExpressionLayers(
   undefined,
