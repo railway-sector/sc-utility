@@ -1,1 +1,0 @@
-import{e7 as l,e8 as s,e9 as o,ea as c}from"./index-Ce5MCOsz.js";function f({level:e,class:n,...t},i){const a=r(e);return l(`h${a}`,{...t,"aria-level":String(a),class:s(o.heading,n),role:"heading"},i)}function r(e){return c(Math.ceil(e),1,6)}function h(e,n=1){return r(e+n)}export{f as i,h as l};
