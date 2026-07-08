@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   utilityPointLayer1,
   utilityLineLayer1,
@@ -7,6 +7,7 @@ import {
   utilityLineLayer,
   queryc,
   chartstack,
+  utilityLayers,
 } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
@@ -20,11 +21,11 @@ import {
   utilityStatusArray,
 } from "../uniqueValues";
 import { queryDefinitionExpression } from "../queryExpression";
-import { chartRenderer } from "../chartRenderer";
 import { legendSetter, rootSetter } from "../chartSetter";
 import { useQuery } from "@tanstack/react-query";
 import { locationKeys } from "../interfaceKeys";
 import type { SelectedLocation, ChartResponse } from "../interfaceKeys";
+import ChartStackColumnRender from "chart-stack-column-render";
 
 // Draw chart
 const Chart = () => {
@@ -40,6 +41,12 @@ const Chart = () => {
   const cpackage = selectedLocation?.cpackage;
   const company = selectedLocation?.company;
   const utype = selectedLocation?.utype;
+
+  //--Recompute only when utype is updated
+  const rLayers = useMemo(
+    () => (!utype ? Object.values(utilityLayers).flat() : utilityLayers[utype]),
+    [utype],
+  );
 
   //--- 2. Streamlined Data Fetching with useQuery
   const { data } = useQuery<ChartResponse | any>({
@@ -87,8 +94,6 @@ const Chart = () => {
   const totaln = data?.totaln || 0;
   const perc_comp = data?.perc || 0;
 
-  //-------------------------------
-
   const legendRef = useRef<unknown | any | undefined>({});
   const chartRef = useRef<unknown | any | undefined>({});
   const chartID = "utility_chart";
@@ -103,7 +108,7 @@ const Chart = () => {
   const paddingRight = 5;
   const paddingBottom = 0;
   const chartIconPositionX = -21;
-  const chartPaddingRightIconLabel = 45;
+  const chartPaddingRightIconLabel = 20;
   const chartBorderLineColor = "#00c5ff";
   const chartBorderLineWidth = 0.4;
 
@@ -147,35 +152,33 @@ const Chart = () => {
     });
     legendRef.current = legend;
 
-    chartRenderer({
-      root: root,
-      chart: chart,
-      data: chartData,
-      layers: [
-        utilityPointLayer,
-        utilityPointLayer1,
-        utilityLineLayer,
-        utilityLineLayer1,
-      ],
-      qChart: queryc,
-      chartCategoryTypes: utility_category_types,
-      chartCategoryFieldScene: chartCategoryTypeField,
-      statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
-      statusStatename: ["comp", "incomp"], //["comp", "incomp", "ongoing"],
-      statusArray: utilityStatusArray,
-      statusField: status_Field,
-      seriesStatusColor: statusColorForChart,
-      strokeColor: chartBorderLineColor,
-      strokeWidth: chartBorderLineWidth,
-      arcgisScene: arcgisScene,
-      new_chartIconSize: new_chartIconSize,
-      new_axisFontSize: new_axisFontSize,
-      chartIconPositionX: chartIconPositionX,
-      chartPaddingRightIconLabel: chartPaddingRightIconLabel,
-      legend: legend,
-      updateChartPanelwidth: setChartPanelwidth,
-    });
-
+    const crender = new ChartStackColumnRender(
+      false,
+      rLayers,
+      root,
+      chart,
+      chartData,
+      undefined,
+      queryc,
+      utility_category_types,
+      chartCategoryTypeField,
+      ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
+      ["comp", "incomp"], //["comp", "incomp", "ongoing"],
+      utilityStatusArray,
+      status_Field,
+      statusColorForChart,
+      chartBorderLineColor,
+      chartBorderLineWidth,
+      arcgisScene?.view,
+      undefined,
+      new_chartIconSize,
+      new_axisFontSize,
+      chartIconPositionX,
+      chartPaddingRightIconLabel,
+      legend,
+      setChartPanelwidth,
+    );
+    crender.chartRendererColumn();
     chart.appear(1000, 100);
 
     return () => {

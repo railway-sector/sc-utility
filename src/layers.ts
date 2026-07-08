@@ -40,7 +40,7 @@ export const chartstack = new ChartStackColumns(
 );
 
 export const queryc = new QueryExpressionLayers(
-  undefined,
+  [undefined],
   [cp_field, company_field, utilTypeField],
   undefined,
   undefined,
@@ -1389,3 +1389,8 @@ export const ngcp_permanentRelo_GroupLayer = new GroupLayer({
   visibilityMode: "independent",
   layers: [ngcp_permanent_relo_lineLayer, ngcp_permanent_relo_poleLayer],
 });
+
+export const utilityLayers: any = {
+  Point: [utilityPointLayer, utilityPointLayer1],
+  Line: [utilityLineLayer, utilityLineLayer1],
+};
