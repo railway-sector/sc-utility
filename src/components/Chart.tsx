@@ -108,7 +108,7 @@ const Chart = () => {
   const paddingRight = 5;
   const paddingBottom = 0;
   const chartIconPositionX = -21;
-  const chartPaddingRightIconLabel = 20;
+  const chartPaddingRightIconLabel = 45;
   const chartBorderLineColor = "#00c5ff";
   const chartBorderLineWidth = 0.4;
 
