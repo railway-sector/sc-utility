@@ -12,12 +12,20 @@ import "@arcgis/map-components/components/arcgis-area-measurement-3d";
 import { defineActions } from "../query";
 
 function ActionPanel() {
-  const [activeWidget, setActiveWidget] = useState(null);
-  const [nextWidget, setNextWidget] = useState(null);
   const shellPanel: any = document.getElementById("left-shell-panel");
   const directLineMeasure = document.querySelector(
     "arcgis-direct-line-measurement-3d",
   );
+
+  const [activeWidget, setActiveWidget] = useState(null);
+  const [nextWidget, setNextWidget] = useState(null);
+
+  //--- Click action handler function for active & next widget
+  const handleActionClick = (event: any) => {
+    const id = event.target.id;
+    setNextWidget(id);
+    setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
+  };
 
   useEffect(() => {
     if (activeWidget) {
@@ -62,11 +70,7 @@ function ActionPanel() {
             icon="layers"
             text="layers"
             id="layers"
-            //textEnabled={true}
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
 
           <calcite-action
@@ -74,10 +78,7 @@ function ActionPanel() {
             icon="basemap"
             text="basemaps"
             id="basemaps"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
 
           <calcite-action
@@ -85,10 +86,7 @@ function ActionPanel() {
             icon="measure-line"
             text="Line Measurement"
             id="directline-measure"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
 
           <calcite-action
@@ -96,10 +94,7 @@ function ActionPanel() {
             icon="information"
             text="Information"
             id="information"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
         </calcite-action-bar>
 
@@ -108,7 +103,6 @@ function ActionPanel() {
             referenceElement="arcgis-scene"
             selectionMode="multiple"
             visibilityAppearance="checkbox"
-            // show-collapse-button
             show-filter
             filter-placeholder="Filter layers"
             listItemCreatedFunction={defineActions}
@@ -127,7 +121,6 @@ function ActionPanel() {
           <arcgis-direct-line-measurement-3d
             id="directLineMeasurementAnalysisButton"
             referenceElement="arcgis-scene"
-            // onarcgisPropertyChange={(event) => console.log(event.target.id)}
           ></arcgis-direct-line-measurement-3d>
         </calcite-panel>
 

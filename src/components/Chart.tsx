@@ -1,46 +1,46 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { use, useEffect, useMemo, useRef, useState } from "react";
 import {
-  utilityPointLayer1,
-  utilityLineLayer1,
   utilityPointLayer,
   utilityLineLayer,
-  queryc,
-  chartstack,
   utilityLayers,
+  utilityPointLayer1,
+  utilityLineLayer1,
 } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
-import { thousands_separators, zoomToLayer } from "../query";
+import {
+  makeQuery,
+  stackColumnChartData,
+  stackColumnChartRender,
+  thousands_separators,
+  zoomToLayer,
+} from "../query";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import {
-  chartCategoryTypeField,
-  status_Field,
-  statusColorForChart,
-  utility_category_types,
-  utilityStatusArray,
+  cp_f,
+  util_comp_f,
+  util_dtype_f,
+  util_status_f,
+  util_status_q,
+  util_type_f,
+  util_types,
+  viastatus_q,
 } from "../uniqueValues";
 import { queryDefinitionExpression } from "../queryExpression";
 import { legendSetter, rootSetter } from "../chartSetter";
 import { useQuery } from "@tanstack/react-query";
-import { locationKeys } from "../interfaceKeys";
-import type { SelectedLocation, ChartResponse } from "../interfaceKeys";
+import type { ChartResponse } from "../interfaceKeys";
 import ChartStackColumnRender from "chart-stack-column-render";
+import ChartStackColumns from "chart-stack-column";
+import { MyContext } from "../contexts/MyContext";
 
 // Draw chart
 const Chart = () => {
+  const { cpackage, company, utype } = use(MyContext);
+
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
-
-  //--- 1. Location state
-  const { data: selectedLocation } = useQuery<SelectedLocation | any>({
-    queryKey: locationKeys.selected,
-    queryFn: async () => ({}),
-    staleTime: Infinity,
-  });
-  const cpackage = selectedLocation?.cpackage;
-  const company = selectedLocation?.company;
-  const utype = selectedLocation?.utype;
 
   //--Recompute only when utype is updated
   const rLayers = useMemo(
@@ -48,7 +48,11 @@ const Chart = () => {
     [utype],
   );
 
-  //--- 2. Streamlined Data Fetching with useQuery
+  //--- Query Expression
+  const qV = [cpackage, company, utype];
+  const qF = [cp_f, util_comp_f, util_dtype_f];
+  const queryc = makeQuery(qV, qF);
+
   const { data } = useQuery<ChartResponse | any>({
     queryKey: [
       cpackage,
@@ -58,11 +62,10 @@ const Chart = () => {
       utilityPointLayer1,
       utilityLineLayer,
       utilityLineLayer1,
-      status_Field,
+      util_status_f,
+      queryc,
     ],
     queryFn: async () => {
-      queryc.qValues = [cpackage, company, utype];
-
       queryDefinitionExpression({
         queryExpression: queryc.queryExpression(),
         featureLayer: [
@@ -73,12 +76,16 @@ const Chart = () => {
         ],
       });
 
-      chartstack.qChart = queryc.queryExpression();
-      chartstack.categoryTypeField = chartCategoryTypeField;
-      chartstack.layers = [utilityPointLayer, utilityLineLayer];
-      chartstack.statusState = [0, 2, 3, 1]; // 2, 3 are dummy
-      chartstack.statusField = "Status";
-      const chartData = await chartstack.chartDataStackColumns();
+      //--- chart data
+      const chartData = await stackColumnChartData({
+        colchart: new ChartStackColumns(),
+        qChart: queryc,
+        categoryTypes: util_types,
+        categoryTypeField: util_type_f,
+        layers: [utilityPointLayer, utilityLineLayer],
+        statusField: util_status_f,
+        statusState: [0, 2, 3, 1],
+      });
 
       zoomToLayer(utilityPointLayer, arcgisScene?.view);
 
@@ -152,33 +159,34 @@ const Chart = () => {
     });
     legendRef.current = legend;
 
-    const crender = new ChartStackColumnRender(
-      false,
-      rLayers,
+    stackColumnChartRender({
+      render: new ChartStackColumnRender(),
+      revit: false,
+      layers: rLayers,
       root,
       chart,
-      chartData,
-      undefined,
-      queryc,
-      utility_category_types,
-      chartCategoryTypeField,
-      ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
-      ["comp", "incomp"], //["comp", "incomp", "ongoing"],
-      utilityStatusArray,
-      status_Field,
-      statusColorForChart,
-      chartBorderLineColor,
-      chartBorderLineWidth,
-      arcgisScene?.view,
-      undefined,
+      data: chartData,
+      buildingLayer: undefined,
+      qChart: queryc,
+      chartCategoryTypes: util_types,
+      chartCategoryTypeField: util_type_f,
+      statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
+      statusStatename: ["comp", "incomp"], //["comp", "incomp", "ongoing"],
+      statusArray: util_status_q,
+      statusField: util_status_f,
+      seriesStatusColor: viastatus_q.map((c: any) => c.color),
+      strokeColor: chartBorderLineColor,
+      strokeWidth: chartBorderLineWidth,
+      view: arcgisScene?.view,
+      setLayerViewFilter: undefined,
       new_chartIconSize,
       new_axisFontSize,
       chartIconPositionX,
       chartPaddingRightIconLabel,
       legend,
-      setChartPanelwidth,
-    );
-    crender.chartRendererColumn();
+      updateChartPanelwidth: setChartPanelwidth,
+    });
+
     chart.appear(1000, 100);
 
     return () => {
@@ -190,80 +198,69 @@ const Chart = () => {
   const valueLabelColor = "#d1d5db";
 
   return (
-    <>
-      <div
-        slot="panel-end"
-        style={{
-          padding: "0 1rem",
-          borderStyle: "solid",
-          borderRightWidth: 3.5,
-          borderLeftWidth: 3.5,
-          borderBottomWidth: 3.5,
-          borderColor: "#555555",
-          justifyContent: "space-between",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            // marginLeft: "15px",
-            // marginRight: "25px",
-            justifyContent: "space-between",
-          }}
-        >
-          <img
-            src="https://EijiGorilla.github.io/Symbols/Utility_Logo.png"
-            alt="Utility Logo"
-            height={`${new_imageSize}%`}
-            width={`${new_imageSize}%`}
-            style={{ marginLeft: "15px", marginTop: "10px" }}
-          />
-          <dl style={{ alignItems: "center", marginRight: "25px" }}>
-            <dt
-              style={{
-                color: primaryLabelColor,
-                fontSize: `${new_fontSize}px`,
-              }}
-            >
-              TOTAL PROGRESS
-            </dt>
-            <dd
-              style={{
-                color: valueLabelColor,
-                fontSize: `${new_valueSize}px`,
-                fontWeight: "bold",
-                fontFamily: "calibri",
-                lineHeight: "1.2",
-                margin: "auto",
-              }}
-            >
-              {thousands_separators(perc_comp)} %
-            </dd>
-            <div
-              style={{
-                color: valueLabelColor,
-                fontSize: `${new_valueSize}*0.5px`,
-                fontFamily: "calibri",
-                lineHeight: "1.2",
-              }}
-            >
-              ({thousands_separators(totaln)})
-            </div>
-          </dl>
-        </div>
-
-        <div
-          id={chartID}
-          style={{
-            height: "71vh",
-            backgroundColor: "rgb(0,0,0,0)",
-            color: "white",
-            marginRight: "10px",
-            marginTop: "10px",
-          }}
-        ></div>
+    <div
+      slot="panel-end"
+      style={{
+        borderStyle: "solid",
+        borderRightWidth: 3.5,
+        borderTopWidth: 0.5,
+        borderLeftWidth: 3.5,
+        borderBottomWidth: 3.5,
+        borderColor: "#555555",
+        justifyContent: "space-between",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <img
+          src="https://EijiGorilla.github.io/Symbols/Utility_Logo.png"
+          alt="Utility Logo"
+          height={`${new_imageSize}%`}
+          width={`${new_imageSize}%`}
+          style={{ marginLeft: "15px", marginTop: "10px" }}
+        />
+        <dl style={{ alignItems: "center", marginRight: "25px" }}>
+          <dt
+            style={{ color: primaryLabelColor, fontSize: `${new_fontSize}px` }}
+          >
+            TOTAL PROGRESS
+          </dt>
+          <dd
+            style={{
+              color: valueLabelColor,
+              fontSize: `${new_valueSize}px`,
+              fontWeight: "bold",
+              fontFamily: "calibri",
+              lineHeight: "1.2",
+              margin: "auto",
+            }}
+          >
+            {thousands_separators(perc_comp)} %
+          </dd>
+          <div
+            style={{
+              color: valueLabelColor,
+              fontSize: `${new_valueSize}*0.5px`,
+              fontFamily: "calibri",
+              lineHeight: "1.2",
+            }}
+          >
+            ({thousands_separators(totaln)})
+          </div>
+        </dl>
       </div>
-    </>
+
+      <div
+        id={chartID}
+        style={{
+          width: "23vw",
+          height: "71vh",
+          backgroundColor: "rgb(0,0,0,0)",
+          color: "white",
+          marginRight: "10px",
+          marginTop: "10px",
+        }}
+      ></div>
+    </div>
   );
 };
 

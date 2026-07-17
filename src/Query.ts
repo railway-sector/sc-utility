@@ -1,6 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { dateTable } from "./layers";
+import QueryExpressionLayers from "query-layers-expression";
+
+//---------------------------------------------------------//
+//                 Add Layers to Map                      //
+//---------------------------------------------------------//
+export function addLayersToMap(map: any, layersList: any[]) {
+  layersList.forEach((layer: any) => {
+    map.add(layer);
+  });
+}
 
 //-----------------------------------------//
 //        Layer visibility                //
@@ -20,41 +30,187 @@ export const resetAllLayers = ({ layers }: layersRevitVisibilityType) => {
   }
 };
 
-// Updat date
-export async function dateUpdate() {
-  const monthList = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+//---------------------------------------------------------//
+//                Get as-of-date                           //
+//---------------------------------------------------------//
+export function yearMonthDay(date: Date) {
+  return {
+    year: date?.getFullYear() ?? 0,
+    month: date?.getMonth() + 1,
+    day: date?.getDate(),
+  };
+}
 
+export function toAsofdate(date: Date) {
+  //--- Return displayed date: (as of date)
+  const { year, day } = yearMonthDay(date);
+  const cmonth = date?.toLocaleString("en-US", { month: "long" });
+  return `${cmonth} ${day}, ${year}`;
+}
+
+export async function dateUpdate(category: string) {
+  //--- Only executed during an initial render
   const query = dateTable.createQuery();
-  query.where = "project = 'SC'" + " AND " + "category = 'Utility Relocation'";
+  query.where = `project = 'N2' AND category = '${category}'`;
 
-  return dateTable.queryFeatures(query).then((response: any) => {
-    const stats = response.features;
-    const dates = stats.map((result: any) => {
-      const date = new Date(result.attributes.date);
-      const year = date.getFullYear();
-      const month = monthList[date.getMonth()];
-      const day = date.getDate();
-      const final = year < 1990 ? "" : `${month} ${day}, ${year}`;
-      return final;
-    });
-    return dates;
+  const { features } = await dateTable.queryFeatures(query);
+  return features.map(({ attributes }: any) => {
+    const date = new Date(attributes.date);
+    const asofdate = toAsofdate(date);
+
+    return asofdate;
   });
 }
 
-// Thousand separators function
+//---------------------------------------------//
+//               Stack Columns                 //
+//---------------------------------------------//
+interface StackColumnChartDataType {
+  colchart: any;
+  qChart: any;
+  categoryTypes: any;
+  categoryTypeField: any;
+  layers: any;
+  statusField: any;
+  statusState: any;
+}
+
+export async function stackColumnChartData({
+  colchart,
+  qChart,
+  categoryTypes,
+  categoryTypeField,
+  layers,
+  statusField,
+  statusState,
+}: StackColumnChartDataType) {
+  colchart.qChart = qChart.queryExpression();
+  colchart.categoryTypes = categoryTypes;
+  colchart.categoryTypeField = categoryTypeField;
+  colchart.layers = layers;
+  colchart.statusField = statusField;
+  colchart.statusState = statusState;
+
+  return await colchart.chartDataStackColumns();
+}
+
+type StatusTypeNamesType =
+  | "To be Constructed"
+  | "Under Construction"
+  | "delayed"
+  | "Completed"
+  | "Exceeded"
+  | "Normal";
+
+type StatusStateType =
+  | "comp"
+  | "incomp"
+  | "ongoing"
+  | "delayed"
+  | "exceeded"
+  | "normal";
+
+interface ChartStackColumnRender {
+  render: any;
+  revit: boolean;
+  layers: any;
+  root: any;
+  chart: any;
+  data: any;
+  buildingLayer?: any;
+  qChart: any;
+  chartCategoryTypes: any;
+  chartCategoryTypeField: any;
+  statusTypename: StatusTypeNamesType[];
+  statusStatename: StatusStateType[];
+  statusArray: any;
+  statusField: any;
+  seriesStatusColor: any;
+  strokeColor: any;
+  strokeWidth: any;
+  view: any;
+  setLayerViewFilter?: any;
+  new_chartIconSize: any;
+  new_axisFontSize: any;
+  chartIconPositionX?: any;
+  chartPaddingRightIconLabel: any;
+  legend: any;
+  updateChartPanelwidth: any;
+}
+
+export async function stackColumnChartRender({
+  render,
+  revit,
+  layers,
+  root,
+  chart,
+  data,
+  buildingLayer,
+  qChart,
+  chartCategoryTypes,
+  chartCategoryTypeField,
+  statusTypename,
+  statusStatename,
+  statusArray,
+  statusField,
+  seriesStatusColor,
+  strokeColor,
+  strokeWidth,
+  view,
+  setLayerViewFilter,
+  new_chartIconSize,
+  new_axisFontSize,
+  chartIconPositionX,
+  chartPaddingRightIconLabel,
+  legend,
+  updateChartPanelwidth,
+}: ChartStackColumnRender) {
+  render.revit = revit;
+  render.layers = layers;
+  render.root = root;
+  render.chart = chart;
+  render.data = data;
+  render.buildingLayer = buildingLayer;
+  render.qChart = qChart;
+  render.chartCategoryTypes = chartCategoryTypes;
+  render.chartCategoryTypeField = chartCategoryTypeField;
+  render.statusTypename = statusTypename;
+  render.statusStatename = statusStatename;
+  render.statusArray = statusArray;
+  render.statusField = statusField;
+  render.seriesStatusColor = seriesStatusColor;
+  render.strokeColor = strokeColor;
+  render.strokeWidth = strokeWidth;
+  render.view = view;
+  render.setLayerViewFilter = setLayerViewFilter;
+  render.new_chartIconSize = new_chartIconSize;
+  render.new_axisFontSize = new_axisFontSize;
+  render.chartIconPositionX = chartIconPositionX;
+  render.chartPaddingRightIconLabel = chartPaddingRightIconLabel;
+  render.legend = legend;
+  render.updateChartPanelwidth = updateChartPanelwidth;
+
+  return await render.chartRendererColumn();
+}
+
+//--- Returns query expression
+export const makeQuery = (
+  qValues: string[],
+  qFields: string[],
+  qExpression?: string,
+  q2Expression?: string,
+) => {
+  const q = new QueryExpressionLayers();
+  q.qValues = qValues;
+  q.qFields = qFields;
+  if (qExpression) q.qExpression = qExpression;
+  if (q2Expression) q.q2Expression = q2Expression;
+  return q;
+};
+
+//------------------------------------------------//
+//                Get as-of-date                  //
+//------------------------------------------------//
 export function thousands_separators(num: any) {
   if (num) {
     const num_parts = num.toString().split(".");
@@ -66,33 +222,15 @@ export function thousands_separators(num: any) {
 export async function zoomToLayer(layer: any, view: any) {
   const response = await layer?.queryExtent();
   view?.goTo(response.extent, { speedFactor: 2 }).catch((error: any) => {
-    if (error.name !== "AbortError") {
-      console.error(error);
-    }
+    if (error.name !== "AbortError") console.error(error);
   });
-
-  // return layer?.queryExtent().then((response: any) => {
-  //   view
-  //     ?.goTo(response.extent, {
-  //       //response.extent
-  //       speedFactor: 2,
-  //     })
-  //     .catch((error: any) => {
-  //       if (error.name !== "AbortError") {
-  //         console.error(error);
-  //       }
-  //     });
-  // });
 }
 
 // Layter list
 export async function defineActions(event: any) {
   const { item } = event;
   if (item.layer.type !== "group") {
-    item.panel = {
-      content: "legend",
-      open: true,
-    };
+    item.panel = { content: "legend", open: true };
   }
 
   item.title === "Chainage" ||

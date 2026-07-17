@@ -12,18 +12,16 @@ import {
   stationLayer,
   alignmentGroupLayer,
   utilityGroupLayer,
-  pierNoLayer,
-  chainageLayer,
-  utilityPointLayer,
-  utilityLineLayer1,
   lagunaLakeRoadNetworkLayer,
   ngcp_permanentRelo_GroupLayer,
   ngcp_site7_GroupLayer,
   ngcp_site6_GroupLayer,
+  sources,
 } from "../layers";
 import type { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-search";
 import { useState } from "react";
+import { addLayersToMap } from "../query";
 
 function MapDisplay() {
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
@@ -31,14 +29,15 @@ function MapDisplay() {
   const [_mapView, setMapView] = useState<any>();
 
   arcgisScene?.viewOnReady(() => {
-    arcgisScene?.map?.add(lagunaLakeRoadNetworkLayer);
-    arcgisScene?.map?.add(ngcp_permanentRelo_GroupLayer);
-    arcgisScene?.map?.add(ngcp_site7_GroupLayer);
-    arcgisScene?.map?.add(ngcp_site6_GroupLayer);
-
-    arcgisScene?.map?.add(alignmentGroupLayer);
-    arcgisScene?.map?.add(utilityGroupLayer);
-    arcgisScene?.map?.add(stationLayer);
+    addLayersToMap(arcgisScene?.map, [
+      lagunaLakeRoadNetworkLayer,
+      ngcp_permanentRelo_GroupLayer,
+      ngcp_site7_GroupLayer,
+      ngcp_site6_GroupLayer,
+      alignmentGroupLayer,
+      utilityGroupLayer,
+      stationLayer,
+    ]);
 
     arcgisScene.hideAttribution = true;
     arcgisScene.view.environment.atmosphereEnabled = false;
@@ -49,46 +48,6 @@ function MapDisplay() {
       arcgisScene.map.ground.opacity = 0.7;
     }
 
-    const sources: any = [
-      {
-        layer: pierNoLayer,
-        searchFields: ["PierNumber"],
-        displayField: "PierNumber",
-        exactMatch: false,
-        outFields: ["PierNumber"],
-        name: "Pier No",
-        zoomScale: 1000,
-        placeholder: "example: P-288",
-      },
-      {
-        layer: chainageLayer,
-        searchFields: ["KmSpot"],
-        displayField: "KmSpot",
-        exactMatch: false,
-        outFields: ["*"],
-        zoomScale: 1000,
-        name: "Main KM",
-        placeholder: "example: 80+400",
-      },
-      {
-        layer: utilityPointLayer,
-        searchFields: ["Id"],
-        displayField: "Id",
-        exactMatch: false,
-        outFields: ["Id"],
-        name: "Unique ID (Point)",
-        placeholder: "example: MER0001-X01",
-      },
-      {
-        layer: utilityLineLayer1,
-        searchFields: ["Id"],
-        displayField: "Id",
-        exactMatch: false,
-        outFields: ["Id"],
-        name: "Unique ID (Line)",
-        placeholder: "example: MER0001-X01",
-      },
-    ];
     arcgisSearch.allPlaceholder = "Pier Number, Chainage, Utility ID";
     arcgisSearch.includeDefaultSourcesDisabled = true;
     arcgisSearch.locationDisabled = true;
@@ -97,7 +56,6 @@ function MapDisplay() {
 
   return (
     <arcgis-scene
-      // item-id="5ba14f5a7db34710897da0ce2d46d55f"
       basemap="dark-gray-vector"
       ground="world-elevation"
       viewingMode="local"

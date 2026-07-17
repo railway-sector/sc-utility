@@ -1,11 +1,10 @@
-import { useMemo, useState } from "react";
+import { use, useMemo, useState } from "react";
 import Select from "react-select";
 import "../index.css";
 import { utilityLineLayer, utilityPointLayer } from "../layers";
 import GenerateDropdownData from "dropdown-pkg-arcgis";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { locationKeys } from "../interfaceKeys";
-import type { SelectedLocation } from "../interfaceKeys";
+import { useQuery } from "@tanstack/react-query";
+import { MyContext } from "../contexts/MyContext";
 
 const theme = {
   bg: "#2b2b2b",
@@ -66,10 +65,10 @@ const customStyles = {
 };
 
 export function DropdownData() {
-  const queryClient = useQueryClient();
+  const { updateCpackage, updateCompany, updateUtype } = use(MyContext);
 
   const [cpSelected, setCpSelected] = useState<null | any>(null);
-  const [companySelected, setCompanySelected] = useState<null | any>(null);
+  const [compSelected, setCompSelected] = useState<null | any>(null);
   const [utypeSelected, setUtypeSelected] = useState<null | any>(null);
 
   const { data: cpackageList } = useQuery<any>({
@@ -87,48 +86,30 @@ export function DropdownData() {
     refetchOnReconnect: false,
   });
 
-  //--- Prevent storing objects when the component is re-rendered
   //-- Recompute only when CP is changed:
   const companyList = useMemo(() => cpSelected?.field2 ?? [], [cpSelected]);
 
   //-- Recompute only when company is changed:
-  const utypeList = useMemo(
-    () => companySelected?.field3 ?? [],
-    [companySelected],
-  );
-
-  // this instantly updates the global cache
-  function setSelectedLocation(patch: Partial<SelectedLocation>) {
-    queryClient.setQueryData<SelectedLocation>(
-      locationKeys.selected,
-      (prev) => ({
-        cpackage: prev?.cpackage ?? null,
-        company: prev?.company ?? null,
-        utype: prev?.utype ?? null,
-        ...patch,
-      }),
-    );
-  }
+  const utypeList = useMemo(() => compSelected?.field3 ?? [], [compSelected]);
 
   const handleContractPackageChange = (obj: any) => {
-    setSelectedLocation({
-      cpackage: obj?.field1 ?? null,
-      company: null,
-      utype: null,
-    });
+    updateCpackage(obj?.field1 ?? null);
+    updateCompany(null);
+    updateUtype(null);
     setCpSelected(obj);
-    setCompanySelected(null);
+    setCompSelected(null);
     setUtypeSelected(null);
   };
 
   const handleCompanyChange = (obj: any) => {
-    setSelectedLocation({ company: obj?.name ?? null, utype: null });
-    setCompanySelected(obj);
+    updateCompany(obj?.name ?? null);
+    updateUtype(null);
+    setCompSelected(obj);
     setUtypeSelected(null);
   };
 
   const handleTypeChange = (obj: any) => {
-    setSelectedLocation({ utype: obj?.name ?? null });
+    updateUtype(obj?.name ?? null);
     setUtypeSelected(obj);
   };
 
@@ -156,7 +137,7 @@ export function DropdownData() {
 
       <Select
         placeholder="Select Company"
-        value={companySelected}
+        value={compSelected}
         options={companyList && companyList}
         onChange={handleCompanyChange}
         getOptionLabel={(x: any) => x.name}
