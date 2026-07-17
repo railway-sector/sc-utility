@@ -298,6 +298,8 @@ export const util_layer_f = "LAYER";
 export const util_height_f = "Height";
 export const util_type_f = "UtilType";
 
+export const minScale = 25000;
+
 export const util_type_icons = [
   "https://EijiGorilla.github.io/Symbols/Telecom_Logo2.svg",
   "https://EijiGorilla.github.io/Symbols/Water_Logo2.svg",

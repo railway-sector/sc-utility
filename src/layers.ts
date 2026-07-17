@@ -17,6 +17,7 @@ import {
   ngcp7_line_renderer,
   ncgp_perm_line_renderer,
   lagnal_road_renderer,
+  minScale,
 } from "./uniqueValues";
 
 import {
@@ -252,6 +253,7 @@ export const utilityPointLayer = new FeatureLayer({
     featureExpressionInfo: { expression: "$feature.Height" },
     unit: "meters",
   },
+  minScale: minScale,
   popupTemplate: util_popup,
 });
 
@@ -267,6 +269,7 @@ export const utilityPointLayer1 = new FeatureLayer({
     unit: "meters",
   },
   labelingInfo: [utilp2_label],
+  minScale: minScale,
   popupTemplate: util_popup,
 });
 
@@ -281,6 +284,7 @@ export const utilityLineLayer = new FeatureLayer({
     unit: "meters",
   },
   renderer: utilLineRenderer(),
+  minScale: minScale,
   popupTemplate: util_popup,
 });
 
@@ -296,6 +300,7 @@ export const utilityLineLayer1 = new FeatureLayer({
   },
   renderer: utilp2_renderer,
   labelingInfo: [utill2_line_label],
+  minScale: minScale,
   popupTemplate: util_popup,
 });
 
