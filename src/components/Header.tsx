@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 function Header() {
   const { data } = useQuery<any>({
     queryKey: ["As_Of_Date"],
-    queryFn: () => dateUpdate("Utility"),
+    queryFn: () => dateUpdate("Utility Relocation"),
     staleTime: Infinity,
   });
   const asofdate = data ?? "";
