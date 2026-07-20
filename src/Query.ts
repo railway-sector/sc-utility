@@ -51,7 +51,7 @@ export function toAsofdate(date: Date) {
 export async function dateUpdate(category: string) {
   //--- Only executed during an initial render
   const query = dateTable.createQuery();
-  query.where = `project = 'N2' AND category = '${category}'`;
+  query.where = `project = 'SC' AND category = '${category}'`;
 
   const { features } = await dateTable.queryFeatures(query);
   return features.map(({ attributes }: any) => {
@@ -178,18 +178,4 @@ export async function zoomToLayer(layer: any, view: any) {
   view?.goTo(response.extent, { speedFactor: 2 }).catch((error: any) => {
     if (error.name !== "AbortError") console.error(error);
   });
-}
-
-// Layter list
-export async function defineActions(event: any) {
-  const { item } = event;
-  if (item.layer.type !== "group") {
-    item.panel = { content: "legend", open: true };
-  }
-
-  item.title === "Chainage" ||
-  item.title === "Viaduct" ||
-  item.title === "Pier No"
-    ? (item.visible = false)
-    : (item.visible = true);
 }

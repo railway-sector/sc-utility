@@ -32,19 +32,6 @@ export const portalItems = (id: any) => {
   return { id: id, portal: portalItem_url };
 };
 
-export const cpackages = [
-  "All",
-  "S-01",
-  "S-02",
-  "S-03a",
-  "S-03b",
-  "S-03c",
-  "S-04",
-  "S-05",
-  "S-06",
-  "S-07",
-];
-
 //----------------------------------------------//
 //              Chart Parameters                //
 //----------------------------------------------//

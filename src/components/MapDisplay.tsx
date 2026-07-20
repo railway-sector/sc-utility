@@ -16,6 +16,7 @@ import {
   ngcp_permanentRelo_GroupLayer,
   ngcp_site7_GroupLayer,
   ngcp_site6_GroupLayer,
+  viaductLayer,
   sources,
 } from "../layers";
 import type { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
@@ -30,6 +31,7 @@ function MapDisplay() {
 
   arcgisScene?.viewOnReady(() => {
     addLayersToMap(arcgisScene?.map, [
+      viaductLayer,
       lagunaLakeRoadNetworkLayer,
       ngcp_permanentRelo_GroupLayer,
       ngcp_site7_GroupLayer,
