@@ -2,7 +2,8 @@ import { use, useMemo, useState } from "react";
 import Select from "react-select";
 import "../index.css";
 import { utilityLineLayer, utilityPointLayer } from "../layers";
-import GenerateDropdownData from "dropdown-pkg-arcgis";
+// import GenerateDropdownData from "dropdown-pkg-arcgis";
+import GenerateDropdownData from "../dpd";
 import { useQuery } from "@tanstack/react-query";
 import { MyContext } from "../contexts/MyContext";
 
