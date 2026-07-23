@@ -88,8 +88,6 @@ export function DropdownData() {
 
   //-- Recompute only when CP is changed:
   const companyList = useMemo(() => cpSelected?.field2 ?? [], [cpSelected]);
-
-  //-- Recompute only when company is changed:
   const utypeList = useMemo(() => compSelected?.field3 ?? [], [compSelected]);
 
   const handleContractPackageChange = (obj: any) => {
