@@ -64,15 +64,13 @@ function useUtilityData(
 
       //--- chart data
       const chartData = await new ChartStackColumns({
-        where: query.queryExpression(),
+        where: query,
         categoryTypes: util_types,
         categoryTypeField: util_type_f,
         layers: [utilityPointLayer, utilityLineLayer],
         statusField: util_status_f,
         statusState: [0, 2, 3, 1],
       }).chartDataStackColumns();
-
-      // zoomToLayer(utilityPointLayer, arcgisScene?.view);
 
       return {
         chartData: chartData[0] || [],
