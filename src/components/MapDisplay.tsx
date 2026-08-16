@@ -18,11 +18,13 @@ import {
   ngcp_site6_GroupLayer,
   viaductLayer,
   sources,
+  pierHeadColumnLayer,
 } from "../layers";
 import type { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-search";
 import { useState } from "react";
 import { addLayersToMap } from "../query";
+import { watch } from "@arcgis/core/core/reactiveUtils.js";
 
 function MapDisplay() {
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
@@ -40,6 +42,13 @@ function MapDisplay() {
       utilityGroupLayer,
       stationLayer,
     ]);
+
+    watch(
+      () => viaductLayer.visible,
+      (visible) => {
+        pierHeadColumnLayer.visible = !visible;
+      },
+    );
 
     arcgisScene.hideAttribution = true;
     arcgisScene.view.environment.atmosphereEnabled = false;
@@ -61,8 +70,8 @@ function MapDisplay() {
       basemap="dark-gray-vector"
       ground="world-elevation"
       viewingMode="local"
-      zoom={13}
-      center="120.9793, 14.62"
+      center="121.05, 14.4"
+      zoom={11}
       onarcgisViewReadyChange={(event: any) => {
         setMapView(event.target.id);
       }}

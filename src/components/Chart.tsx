@@ -9,13 +9,7 @@ import {
 } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
-import {
-  makeQuery,
-  stackColumnChartData,
-  stackColumnChartRender,
-  thousands_separators,
-  zoomToLayer,
-} from "../query";
+import { thousands_separators, zoomToLayer } from "../query";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import {
   cp_f,
@@ -34,6 +28,61 @@ import type { ChartResponse } from "../interfaceKeys";
 import ChartStackColumnRender from "chart-stack-column-render";
 import ChartStackColumns from "chart-stack-column";
 import { MyContext } from "../contexts/MyContext";
+import QueryExpressionLayers from "query-layers-expression";
+
+//-----------------------//
+//     usetUtilityData   //
+//-----------------------//
+function useUtilityData(
+  cpackage: string,
+  company: string,
+  utype: string,
+  query: any,
+) {
+  return useQuery<ChartResponse | any>({
+    queryKey: [
+      cpackage,
+      company,
+      utype,
+      utilityPointLayer,
+      utilityPointLayer1,
+      utilityLineLayer,
+      utilityLineLayer1,
+      util_status_f,
+      query,
+    ],
+    queryFn: async () => {
+      queryDefinitionExpression({
+        queryExpression: query.queryExpression(),
+        featureLayer: [
+          utilityPointLayer,
+          utilityPointLayer1,
+          utilityLineLayer,
+          utilityLineLayer1,
+        ],
+      });
+
+      //--- chart data
+      const chartData = await new ChartStackColumns({
+        where: query.queryExpression(),
+        categoryTypes: util_types,
+        categoryTypeField: util_type_f,
+        layers: [utilityPointLayer, utilityLineLayer],
+        statusField: util_status_f,
+        statusState: [0, 2, 3, 1],
+      }).chartDataStackColumns();
+
+      // zoomToLayer(utilityPointLayer, arcgisScene?.view);
+
+      return {
+        chartData: chartData[0] || [],
+        totaln: chartData[1] || 0,
+        perc: chartData[2] || 0,
+      };
+    },
+    staleTime: Infinity,
+  });
+}
 
 // Draw chart
 const Chart = () => {
@@ -49,54 +98,13 @@ const Chart = () => {
   );
 
   //--- Query Expression
-  const qV = [cpackage, company, utype];
-  const qF = [cp_f, util_comp_f, util_dtype_f];
-  const queryc = makeQuery(qV, qF);
-
-  const { data } = useQuery<ChartResponse | any>({
-    queryKey: [
-      cpackage,
-      company,
-      utype,
-      utilityPointLayer,
-      utilityPointLayer1,
-      utilityLineLayer,
-      utilityLineLayer1,
-      util_status_f,
-      queryc,
-    ],
-    queryFn: async () => {
-      queryDefinitionExpression({
-        queryExpression: queryc.queryExpression(),
-        featureLayer: [
-          utilityPointLayer,
-          utilityPointLayer1,
-          utilityLineLayer,
-          utilityLineLayer1,
-        ],
-      });
-
-      //--- chart data
-      const chartData = await stackColumnChartData({
-        colchart: new ChartStackColumns(),
-        qChart: queryc,
-        categoryTypes: util_types,
-        categoryTypeField: util_type_f,
-        layers: [utilityPointLayer, utilityLineLayer],
-        statusField: util_status_f,
-        statusState: [0, 2, 3, 1],
-      });
-
-      zoomToLayer(utilityPointLayer, arcgisScene?.view);
-
-      return {
-        chartData: chartData[0] || [],
-        totaln: chartData[1] || 0,
-        perc: chartData[2] || 0,
-      };
-    },
-    staleTime: Infinity,
+  const q1 = new QueryExpressionLayers({
+    qFields: [cp_f, util_comp_f, util_dtype_f],
+    qValues: [cpackage, company, utype],
   });
+
+  const { data, isLoading } = useUtilityData(cpackage, company, utype, q1);
+
   const chartData = data?.chartData || [];
   const totaln = data?.totaln || 0;
   const perc_comp = data?.perc || 0;
@@ -125,8 +133,16 @@ const Chart = () => {
   const new_axisFontSize = chartPanelwidth * 0.036;
   const new_imageSize = chartPanelwidth * 0.055;
 
-  // Utility Chart
+  const zoomFiltersRef = useRef(`${cpackage}-${company}-${utype}`);
+
   useEffect(() => {
+    const currentZoomFilters = `${cpackage}-${company}-${utype}`;
+
+    if (currentZoomFilters !== zoomFiltersRef.current) {
+      zoomFiltersRef.current = currentZoomFilters;
+      zoomToLayer(utilityPointLayer, arcgisScene?.view);
+    }
+
     const root = rootSetter({ chartID: chartID });
     const chart = root.container.children.push(
       am5xy.XYChart.new(root, {
@@ -159,15 +175,15 @@ const Chart = () => {
     });
     legendRef.current = legend;
 
-    stackColumnChartRender({
-      render: new ChartStackColumnRender(),
+    //--- Chart Renderer
+    new ChartStackColumnRender({
       revit: false,
       layers: rLayers,
       root,
       chart,
       data: chartData,
       buildingLayer: undefined,
-      qChart: queryc,
+      where: q1,
       chartCategoryTypes: util_types,
       chartCategoryTypeField: util_type_f,
       statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
@@ -185,14 +201,12 @@ const Chart = () => {
       chartPaddingRightIconLabel,
       legend,
       updateChartPanelwidth: setChartPanelwidth,
-    });
-
-    chart.appear(1000, 100);
+    }).chartRendererColumn();
 
     return () => {
       root.dispose();
     };
-  });
+  }, [chartData]);
 
   const primaryLabelColor = "#9ca3af";
   const valueLabelColor = "#d1d5db";
@@ -232,6 +246,7 @@ const Chart = () => {
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
+              opacity: isLoading ? 0 : 1,
             }}
           >
             {thousands_separators(perc_comp)} %
@@ -242,6 +257,7 @@ const Chart = () => {
               fontSize: `${new_valueSize}*0.5px`,
               fontFamily: "calibri",
               lineHeight: "1.2",
+              opacity: isLoading ? 0 : 1,
             }}
           >
             ({thousands_separators(totaln)})
@@ -258,6 +274,7 @@ const Chart = () => {
           color: "white",
           marginRight: "10px",
           marginTop: "10px",
+          opacity: isLoading ? 0 : 1,
         }}
       ></div>
     </div>

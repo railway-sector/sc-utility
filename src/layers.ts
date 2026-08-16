@@ -153,6 +153,7 @@ export const ngcp_site6_poleLayer = new FeatureLayer({
   layerId: 1,
   title: "Pole",
   definitionExpression: "SiteNo = '6'",
+  minScale: 100000,
   popupEnabled: false,
   renderer: ngcp6_point_renderer,
 });
@@ -163,6 +164,7 @@ export const ngcp_site6_lineLayer = new FeatureLayer({
   layerId: 2,
   title: "Line",
   definitionExpression: "SiteNo = '6'",
+  minScale: 100000,
   popupEnabled: false,
   renderer: ngcp6_line_renderer,
 });
@@ -174,6 +176,7 @@ export const ngcp_site7_poleLayer = new FeatureLayer({
   layerId: 1,
   title: "Pole",
   definitionExpression: "SiteNo = '7'",
+  minScale: 100000,
   popupEnabled: false,
   renderer: ngcp7_point_renderer,
 });
@@ -184,6 +187,7 @@ export const ngcp_site7_lineLayer = new FeatureLayer({
   layerId: 2,
   title: "Line",
   definitionExpression: "SiteNo = '7'",
+  minScale: 100000,
   popupEnabled: false,
   renderer: ngcp7_line_renderer,
 });
@@ -194,6 +198,7 @@ export const ngcp_permanent_relo_poleLayer = new FeatureLayer({
   elevationInfo: { mode: "on-the-ground" },
   layerId: 4,
   title: "Pole",
+  minScale: 100000,
   popupEnabled: false,
   renderer: ngcp_perm_point_renderer,
 });
@@ -203,6 +208,7 @@ export const ngcp_permanent_relo_lineLayer = new FeatureLayer({
   elevationInfo: { mode: "on-the-ground" },
   layerId: 5,
   title: "Line",
+  minScale: 100000,
   popupEnabled: false,
   renderer: ncgp_perm_line_renderer,
 });
@@ -213,6 +219,7 @@ export const lagunaLakeRoadNetworkLayer = new FeatureLayer({
   elevationInfo: { mode: "on-the-ground" },
   layerId: 3,
   title: "Laguna Lakeshore Road Network (LLRN) Project",
+  minScale: 100000,
   popupEnabled: false,
   renderer: lagnal_road_renderer,
 });
@@ -323,7 +330,7 @@ export const utilityLayers: any = {
 
 //--- VIADUCT MULTIPATCH LAYER ---//
 export const viaductLayer = new SceneLayer({
-  portalItem: portalItems("1f89733a04b443e2a1e0e5e6dfd493e3"),
+  portalItem: portalItems("691f64c4647f439eabc9b18ebd56ce73"),
   elevationInfo: { mode: "absolute-height" },
   title: "Viaduct",
   labelsVisible: false,
