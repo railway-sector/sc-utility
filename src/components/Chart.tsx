@@ -142,6 +142,8 @@ const Chart = () => {
     }
 
     const root = rootSetter({ chartID: chartID });
+    root.setThemes([]);
+
     const chart = root.container.children.push(
       am5xy.XYChart.new(root, {
         panX: false,
