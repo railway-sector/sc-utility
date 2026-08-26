@@ -9,7 +9,6 @@ import MapDisplay from "./components/MapDisplay";
 import ActionPanel from "./components/ActionPanel";
 import Header from "./components/Header";
 import Chart from "./components/Chart";
-import UndergroundSwitch from "./components/UndergroundSwitch";
 import { authenticate } from "./autho";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MyContext } from "./contexts/MyContext";
@@ -58,7 +57,6 @@ export function App(): React.JSX.Element {
             >
               <QueryClientProvider client={queryClient}>
                 <ActionPanel />
-                <UndergroundSwitch />
                 <Chart />
                 <MapDisplay />
                 <Header />

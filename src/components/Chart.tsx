@@ -125,11 +125,11 @@ const Chart = () => {
   const chartBorderLineColor = "#00c5ff";
   const chartBorderLineWidth = 0.4;
 
-  const new_fontSize = chartPanelwidth / 20;
-  const new_valueSize = new_fontSize * 1.55;
-  const new_chartIconSize = chartPanelwidth * 0.07;
-  const new_axisFontSize = chartPanelwidth * 0.036;
-  const new_imageSize = chartPanelwidth * 0.055;
+  const fontSize = chartPanelwidth / 20;
+  const valueSize = fontSize * 1.55;
+  const chartIconSize = chartPanelwidth * 0.07;
+  const axisFontSize = chartPanelwidth * 0.036;
+  const imageSize = chartPanelwidth * 0.055;
 
   const zoomFiltersRef = useRef(`${cpackage}-${company}-${utype}`);
 
@@ -186,16 +186,16 @@ const Chart = () => {
       where: q1,
       chartCategoryTypes: util_types,
       chartCategoryTypeField: util_type_f,
-      statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
-      statusStatename: ["comp", "incomp"], //["comp", "incomp", "ongoing"],
+      statusTypename: ["Completed", "To be Constructed"],
+      statusStatename: ["comp", "incomp"],
       statusArray: util_status_q,
       statusField: util_status_f,
       seriesStatusColor: viastatus_q.map((c: any) => c.color),
       strokeColor: chartBorderLineColor,
       strokeWidth: chartBorderLineWidth,
       view: arcgisScene?.view,
-      new_chartIconSize,
-      new_axisFontSize,
+      new_chartIconSize: chartIconSize,
+      new_axisFontSize: axisFontSize,
       chartIconPositionX,
       chartPaddingRightIconLabel,
       legend,
@@ -227,20 +227,18 @@ const Chart = () => {
         <img
           src="https://EijiGorilla.github.io/Symbols/Utility_Logo.png"
           alt="Utility Logo"
-          height={`${new_imageSize}%`}
-          width={`${new_imageSize}%`}
+          height={`${imageSize}%`}
+          width={`${imageSize}%`}
           style={{ marginLeft: "15px", marginTop: "10px" }}
         />
         <dl style={{ alignItems: "center", marginRight: "25px" }}>
-          <dt
-            style={{ color: primaryLabelColor, fontSize: `${new_fontSize}px` }}
-          >
+          <dt style={{ color: primaryLabelColor, fontSize: `${fontSize}px` }}>
             TOTAL PROGRESS
           </dt>
           <dd
             style={{
               color: valueLabelColor,
-              fontSize: `${new_valueSize}px`,
+              fontSize: `${valueSize}px`,
               fontWeight: "bold",
               fontFamily: "calibri",
               lineHeight: "1.2",
@@ -253,7 +251,7 @@ const Chart = () => {
           <div
             style={{
               color: valueLabelColor,
-              fontSize: `${new_valueSize}*0.5px`,
+              fontSize: `${valueSize}*0.5px`,
               fontFamily: "calibri",
               lineHeight: "1.2",
               opacity: isLoading ? 0 : 1,

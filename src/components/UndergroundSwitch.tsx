@@ -1,46 +1,44 @@
 import "../index.css";
-import "@esri/calcite-components/components/calcite-switch";
+import "@esri/calcite-components/dist/components/calcite-switch";
 import { useEffect, useState } from "react";
-import type { ArcgisScene } from "@arcgis/map-components/components/arcgis-scene";
 
 function UndergroundSwitch() {
-  const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
+  const arcgisScene = document.querySelector("arcgis-scene");
   const [underground, setUnderground] = useState(false);
 
   useEffect(() => {
     if (arcgisScene?.map?.ground) {
-      arcgisScene.map.ground.opacity = underground === true ? 0.7 : 1;
+      arcgisScene.map.ground.opacity = underground === true ? 1 : 0.7;
     }
   }, [underground]);
 
   return (
-    <>
+    <div slot="bottom-right">
       <div
         style={{
-          position: "fixed",
-          zIndex: 10,
-          bottom: 0,
           color: "white",
-          borderStyle: "solid",
-          borderColor: "grey",
-          borderWidth: "0.7px",
           backgroundColor: "#2b2b2b",
           paddingLeft: 5,
           paddingRight: 5,
           paddingTop: 4,
           paddingBottom: 4,
+          borderStyle: "solid",
+          borderWidth: 0.5,
+          borderColor: "#555555",
+          borderRadius: "17px",
+          whiteSpace: "nowrap",
         }}
       >
         Ground: {""}
-        On{" "}
+        off{" "}
         <calcite-switch
           oncalciteSwitchChange={(event: any) =>
             setUnderground(event.target.checked)
           }
         ></calcite-switch>{" "}
-        Off
+        on
       </div>
-    </>
+    </div>
   );
 }
 

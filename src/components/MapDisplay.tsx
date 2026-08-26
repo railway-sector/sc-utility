@@ -25,6 +25,7 @@ import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-sear
 import { useState } from "react";
 import { addLayersToMap } from "../query";
 import { watch } from "@arcgis/core/core/reactiveUtils.js";
+import UndergroundSwitch from "./UndergroundSwitch";
 
 function MapDisplay() {
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
@@ -81,6 +82,8 @@ function MapDisplay() {
         <arcgis-search></arcgis-search>
       </arcgis-expand>
       <arcgis-zoom slot="bottom-right"></arcgis-zoom>
+
+      <UndergroundSwitch />
     </arcgis-scene>
   );
 }
