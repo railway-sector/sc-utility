@@ -30,6 +30,41 @@ import ChartStackColumns from "chart-stack-column";
 import { MyContext } from "../contexts/MyContext";
 import QueryExpressionLayers from "query-layers-expression";
 
+const CHART_ID = "utility_chart";
+
+// Static layout constants (do not depend on props/state, so hoisted out of the component)
+const CHART_MARGINS = {
+  marginTop: 0,
+  marginLeft: 0,
+  marginRight: 0,
+  marginBottom: 0,
+};
+const CHART_PADDING = {
+  paddingTop: 10,
+  paddingLeft: 5,
+  paddingRight: 5,
+  paddingBottom: 0,
+};
+const CHART_ICON_POSITION_X = -21;
+const CHART_PADDING_RIGHT_ICON_LABEL = 45;
+const CHART_BORDER_LINE_COLOR = "#00c5ff";
+const CHART_BORDER_LINE_WIDTH = 0.4;
+const STATUS_TYPE_NAMES: any = ["Completed", "To be Constructed"];
+const STATUS_STATE_NAMES: any = ["comp", "incomp"];
+
+const PRIMARY_LABEL_COLOR = "#9ca3af";
+const VALUE_LABEL_COLOR = "#d1d5db";
+
+const PANEL_BORDER_STYLE = {
+  borderStyle: "solid" as const,
+  borderRightWidth: 3.5,
+  borderTopWidth: 0.5,
+  borderLeftWidth: 3.5,
+  borderBottomWidth: 3.5,
+  borderColor: "#555555",
+  justifyContent: "space-between" as const,
+};
+
 //-----------------------//
 //     usetUtilityData   //
 //-----------------------//
@@ -37,7 +72,7 @@ function useUtilityData(
   cpackage: string,
   company: string,
   utype: string,
-  query: any,
+  query: QueryExpressionLayers,
 ) {
   return useQuery<ChartResponse | any>({
     queryKey: [
@@ -85,9 +120,7 @@ function useUtilityData(
 // Draw chart
 const Chart = () => {
   const { cpackage, company, utype } = use(MyContext);
-
-  const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
-  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
+  const [chartPanelwidth, setChartPanelwidth] = useState<number>(0);
 
   //--Recompute only when utype is updated
   const rLayers = useMemo(
@@ -96,44 +129,35 @@ const Chart = () => {
   );
 
   //--- Query Expression
-  const q1 = new QueryExpressionLayers({
-    qFields: [cp_f, util_comp_f, util_dtype_f],
-    qValues: [cpackage, company, utype],
-  });
+  const q1 = useMemo(
+    () =>
+      new QueryExpressionLayers({
+        qFields: [cp_f, util_comp_f, util_dtype_f],
+        qValues: [cpackage, company, utype],
+      }),
+    [cpackage, company, utype],
+  );
 
   const { data, isLoading } = useUtilityData(cpackage, company, utype, q1);
 
-  const chartData = data?.chartData || [];
-  const totaln = data?.totaln || 0;
-  const perc_comp = data?.perc || 0;
+  const chartData = data?.chartData ?? [];
+  const totaln = data?.totaln ?? 0;
+  const perc_comp = data?.perc ?? 0;
 
   const legendRef = useRef<unknown | any | undefined>({});
   const chartRef = useRef<unknown | any | undefined>({});
-  const chartID = "utility_chart";
-
-  // Define parameters
-  const marginTop = 0;
-  const marginLeft = 0;
-  const marginRight = 0;
-  const marginBottom = 0;
-  const paddingTop = 10;
-  const paddingLeft = 5;
-  const paddingRight = 5;
-  const paddingBottom = 0;
-  const chartIconPositionX = -21;
-  const chartPaddingRightIconLabel = 45;
-  const chartBorderLineColor = "#00c5ff";
-  const chartBorderLineWidth = 0.4;
 
   const fontSize = chartPanelwidth / 20;
   const valueSize = fontSize * 1.55;
   const chartIconSize = chartPanelwidth * 0.07;
   const axisFontSize = chartPanelwidth * 0.036;
-  const imageSize = chartPanelwidth * 0.055;
 
   const zoomFiltersRef = useRef(`${cpackage}-${company}-${utype}`);
 
   useEffect(() => {
+    const arcgisScene = document.querySelector(
+      "arcgis-scene",
+    ) as ArcgisScene | null;
     const currentZoomFilters = `${cpackage}-${company}-${utype}`;
 
     if (currentZoomFilters !== zoomFiltersRef.current) {
@@ -141,7 +165,7 @@ const Chart = () => {
       zoomToLayer(utilityPointLayer, arcgisScene?.view);
     }
 
-    const root = rootSetter({ chartID: chartID });
+    const root = rootSetter({ chartID: CHART_ID });
     root.setThemes([]);
 
     const chart = root.container.children.push(
@@ -149,14 +173,8 @@ const Chart = () => {
         panX: false,
         panY: false,
         layout: root.verticalLayout,
-        marginTop: marginTop,
-        marginLeft: marginLeft,
-        marginRight: marginRight,
-        marginBottom: marginBottom,
-        paddingTop: paddingTop,
-        paddingLeft: paddingLeft,
-        paddingRight: paddingRight,
-        paddingBottom: paddingBottom,
+        ...CHART_MARGINS,
+        ...CHART_PADDING,
         scale: 1,
         height: am5.percent(100),
       }),
@@ -186,18 +204,18 @@ const Chart = () => {
       where: q1,
       chartCategoryTypes: util_types,
       chartCategoryTypeField: util_type_f,
-      statusTypename: ["Completed", "To be Constructed"],
-      statusStatename: ["comp", "incomp"],
+      statusTypename: STATUS_TYPE_NAMES,
+      statusStatename: STATUS_STATE_NAMES,
       statusArray: util_status_q,
       statusField: util_status_f,
       seriesStatusColor: viastatus_q.map((c: any) => c.color),
-      strokeColor: chartBorderLineColor,
-      strokeWidth: chartBorderLineWidth,
+      strokeColor: CHART_BORDER_LINE_COLOR,
+      strokeWidth: CHART_BORDER_LINE_WIDTH,
       view: arcgisScene?.view,
       new_chartIconSize: chartIconSize,
       new_axisFontSize: axisFontSize,
-      chartIconPositionX,
-      chartPaddingRightIconLabel,
+      chartIconPositionX: CHART_ICON_POSITION_X,
+      chartPaddingRightIconLabel: CHART_PADDING_RIGHT_ICON_LABEL,
       legend,
       updateChartPanelwidth: setChartPanelwidth,
     }).chartRendererColumn();
@@ -205,39 +223,29 @@ const Chart = () => {
     return () => {
       root.dispose();
     };
-  }, [chartData]);
-
-  const primaryLabelColor = "#9ca3af";
-  const valueLabelColor = "#d1d5db";
+    // axisFontSize/chartIconSize derive from chartPanelwidth, which is itself
+    // set by the renderer (updateChartPanelwidth) — including it here would
+    // cause an infinite re-render loop, so it's deliberately left out.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chartData, cpackage, company, utype, rLayers, q1]);
 
   return (
-    <div
-      slot="panel-end"
-      style={{
-        borderStyle: "solid",
-        borderRightWidth: 3.5,
-        borderTopWidth: 0.5,
-        borderLeftWidth: 3.5,
-        borderBottomWidth: 3.5,
-        borderColor: "#555555",
-        justifyContent: "space-between",
-      }}
-    >
+    <div slot="panel-end" style={PANEL_BORDER_STYLE}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <img
           src="https://EijiGorilla.github.io/Symbols/Utility_Logo.png"
           alt="Utility Logo"
-          height={`${imageSize}%`}
-          width={`${imageSize}%`}
+          height={`20%`}
+          width={`20%`}
           style={{ marginLeft: "15px", marginTop: "10px" }}
         />
         <dl style={{ alignItems: "center", marginRight: "25px" }}>
-          <dt style={{ color: primaryLabelColor, fontSize: `${fontSize}px` }}>
+          <dt style={{ color: PRIMARY_LABEL_COLOR, fontSize: `${fontSize}px` }}>
             TOTAL PROGRESS
           </dt>
           <dd
             style={{
-              color: valueLabelColor,
+              color: VALUE_LABEL_COLOR,
               fontSize: `${valueSize}px`,
               fontWeight: "bold",
               fontFamily: "calibri",
@@ -250,8 +258,8 @@ const Chart = () => {
           </dd>
           <div
             style={{
-              color: valueLabelColor,
-              fontSize: `${valueSize}*0.5px`,
+              color: VALUE_LABEL_COLOR,
+              fontSize: `${valueSize * 0.5}px`,
               fontFamily: "calibri",
               lineHeight: "1.2",
               opacity: isLoading ? 0 : 1,
@@ -263,7 +271,7 @@ const Chart = () => {
       </div>
 
       <div
-        id={chartID}
+        id={CHART_ID}
         style={{
           width: "23vw",
           height: "71vh",
