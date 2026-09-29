@@ -23,14 +23,14 @@ import {
 } from "../uniqueValues";
 import { queryDefinitionExpression } from "../queryExpression";
 import { legendSetter, rootSetter } from "../chartSetter";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ChartResponse } from "../interfaceKeys";
 import ChartStackColumnRender from "chart-stack-column-render";
 import ChartStackColumns from "chart-stack-column";
 import { MyContext } from "../contexts/MyContext";
 import QueryExpressionLayers from "query-layers-expression";
 
-const CHART_ID = "utility_chart";
+const chartID = "utility_chart";
 
 // Static layout constants (do not depend on props/state, so hoisted out of the component)
 const CHART_MARGINS = {
@@ -49,9 +49,6 @@ const CHART_ICON_POSITION_X = -21;
 const CHART_PADDING_RIGHT_ICON_LABEL = 45;
 const CHART_BORDER_LINE_COLOR = "#00c5ff";
 const CHART_BORDER_LINE_WIDTH = 0.4;
-const STATUS_TYPE_NAMES: any = ["Completed", "To be Constructed"];
-const STATUS_STATE_NAMES: any = ["comp", "incomp"];
-
 const PRIMARY_LABEL_COLOR = "#9ca3af";
 const VALUE_LABEL_COLOR = "#d1d5db";
 
@@ -113,6 +110,7 @@ function useUtilityData(
         perc: chartData[2] || 0,
       };
     },
+    placeholderData: keepPreviousData,
     staleTime: Infinity,
   });
 }
@@ -120,6 +118,7 @@ function useUtilityData(
 // Draw chart
 const Chart = () => {
   const { cpackage, company, utype } = use(MyContext);
+  const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
   const [chartPanelwidth, setChartPanelwidth] = useState<number>(0);
 
   //--Recompute only when utype is updated
@@ -145,6 +144,7 @@ const Chart = () => {
   const perc_comp = data?.perc ?? 0;
 
   const legendRef = useRef<unknown | any | undefined>({});
+  const rendererRef = useRef<ChartStackColumnRender | null>(null);
   const chartRef = useRef<unknown | any | undefined>({});
 
   const fontSize = chartPanelwidth / 20;
@@ -152,22 +152,46 @@ const Chart = () => {
   const chartIconSize = chartPanelwidth * 0.07;
   const axisFontSize = chartPanelwidth * 0.036;
 
+  //--- Signature of the filters that should trigger a re-zoom.
+  //  Set once from the true first render — NOT reset inside the
+  //  effect — so React 18 StrictMode's dev-only double effect
+  //  invoke (mount -> cleanup -> mount) sees "nothing changed"
+  //  on both passes and correctly skips the zoom both times.
+  //  A zoom only fires once one of these values genuinely
+  //  changes on a later, real render.
   const zoomFiltersRef = useRef(`${cpackage}-${company}-${utype}`);
 
   useEffect(() => {
-    const arcgisScene = document.querySelector(
-      "arcgis-scene",
-    ) as ArcgisScene | null;
     const currentZoomFilters = `${cpackage}-${company}-${utype}`;
 
     if (currentZoomFilters !== zoomFiltersRef.current) {
       zoomFiltersRef.current = currentZoomFilters;
       zoomToLayer(utilityPointLayer, arcgisScene?.view);
     }
+  }, [chartData]);
 
-    const root = rootSetter({ chartID: CHART_ID });
+  //--- Keep click-handler-relevant values fresh without rebuilding the
+  //    chart. view lives here too (not passed statically to the
+  //    renderer) since arcgis-scene's view may not be ready on first
+  //    mount.
+  const configBaseArgs = {
+    revit: false,
+    layers: rLayers,
+    buildingLayer: undefined,
+    chartCategoryTypeField: util_type_f,
+    where: q1,
+    status_field: util_status_f,
+    view: arcgisScene?.view,
+  };
+  const configRef = useRef({ ...configBaseArgs });
+  useEffect(() => {
+    configRef.current = { ...configBaseArgs };
+  }, [data, util_status_f, arcgisScene]);
+
+  //---  Column Chart Renderer — created ONCE (mount only)
+  useEffect(() => {
+    const root = rootSetter({ chartID: chartID });
     root.setThemes([]);
-
     const chart = root.container.children.push(
       am5xy.XYChart.new(root, {
         panX: false,
@@ -193,41 +217,55 @@ const Chart = () => {
     });
     legendRef.current = legend;
 
-    //--- Chart Renderer
-    new ChartStackColumnRender({
-      revit: false,
-      layers: rLayers,
+    //--- NOTE: no `view` here — it's read live from configRef.current
+    //    inside chartrender.ts, since arcgis-scene may not have a
+    //    ready `.view` yet at this point.
+    const renderer = new ChartStackColumnRender({
       root,
       chart,
-      data: chartData,
-      buildingLayer: undefined,
-      where: q1,
+      data: [],
+      configRef,
       chartCategoryTypes: util_types,
-      chartCategoryTypeField: util_type_f,
-      statusTypename: STATUS_TYPE_NAMES,
-      statusStatename: STATUS_STATE_NAMES,
+      statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
+      statusStatename: ["comp", "incomp"], //["comp", "incomp", "ongoing"],
       statusArray: util_status_q,
-      statusField: util_status_f,
       seriesStatusColor: viastatus_q.map((c: any) => c.color),
       strokeColor: CHART_BORDER_LINE_COLOR,
       strokeWidth: CHART_BORDER_LINE_WIDTH,
-      view: arcgisScene?.view,
-      new_chartIconSize: chartIconSize,
-      new_axisFontSize: axisFontSize,
+      chartIconSize,
+      axisFontSize,
       chartIconPositionX: CHART_ICON_POSITION_X,
       chartPaddingRightIconLabel: CHART_PADDING_RIGHT_ICON_LABEL,
       legend,
       updateChartPanelwidth: setChartPanelwidth,
-    }).chartRendererColumn();
+    });
+    rendererRef.current = renderer;
+    renderer.chartRendererColumn();
 
     return () => {
       root.dispose();
+      rendererRef.current = null;
     };
-    // axisFontSize/chartIconSize derive from chartPanelwidth, which is itself
-    // set by the renderer (updateChartPanelwidth) — including it here would
-    // cause an infinite re-render loop, so it's deliberately left out.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chartData, cpackage, company, utype, rLayers, q1]);
+  }, []);
+
+  //--- Push new data / inner value / affected-area figures into the
+  //    already-mounted chart. No dispose, no rebuild -> no blink.
+  //    NOTE: affectedAreaValue is NOT called here directly — it's
+  //    registered once inside chartrender.ts and reads live data via
+  //    closures, which updateData() keeps in sync. Calling it here on
+  //    every render would both miss the first paint and stack
+  //    duplicate adapters.
+  useEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer || !chartPanelwidth) return; // wait for a real width
+
+    //--- Sizes are captured at construction, so refresh them here
+    renderer.chartIconSize = chartIconSize;
+    renderer.axisFontSize = axisFontSize;
+
+    renderer.updateData(chartData);
+  }, [chartData, chartPanelwidth]);
 
   return (
     <div slot="panel-end" style={PANEL_BORDER_STYLE}>
@@ -271,10 +309,10 @@ const Chart = () => {
       </div>
 
       <div
-        id={CHART_ID}
+        id={chartID}
         style={{
-          width: "23vw",
-          height: "71vh",
+          width: "95%",
+          height: "72vh",
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
           marginRight: "10px",
