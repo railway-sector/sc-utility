@@ -1,0 +1,1 @@
+import{c_ as r}from"./index-CkMrRar4.js";const o={getObjectId(t){return t.objectId},getAttributes(t){return t.attributes},getAttribute(t,e){return t.attributes[e]},cloneWithGeometry(t,e,n){return new r(e,t.attributes,null,t.objectId,t.displayId,t.distance,t.vertexCount)},getGeometry(t){return t.geometry},getCentroid(t,e){return t.ensureCentroid(e)}};export{o as t};
